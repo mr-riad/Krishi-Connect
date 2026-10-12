@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "513199636831",
+    "project_id": "krishi-connect-9ca73",
+    "storage_bucket": "krishi-connect-9ca73.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513199636831:android:9ccc9faba4975f4ee376ea",
+        "android_client_info": {
+          "package_name": "com.example.krishi_connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxqOX-ZS4Y9ER6H7m1sqKdgVjYlmzMBLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

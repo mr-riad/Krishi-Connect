@@ -3,10 +3,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
+import '../features/buyer/buyer_nav.dart';
+import '../features/farmer/farmer_nav.dart';
 import '../features/login_screen.dart';
-
-// Screens to be implemented as features are created
-// import 'package:sandraluty/features/...';
 
 final class Routes {
   static final Routes _routes = Routes._internal();
@@ -15,44 +14,12 @@ final class Routes {
 
   // Auth Routes
   static const String loginScreen = '/logIn';
-  static const String signUpScreen = '/signUp';
-  static const String clientSignUp = '/clientSignUp';
-  static const String providerSignUp = '/providerSignUp';
-  static const String forgotPWScreen = '/ForgotPWScreen';
-  static const String otpScreen = '/OtpScreen';
-  static const String personalInformationScreen = '/personalInformationScreen';
-  static const String providerNavigationScreen = '/providerNavigationScreen';
-  static const String jobDetailsScreen = '/jobDetailsScreen';
-  static const String bitSubmitScreen = '/bitSubmitScreen';
-  static const String confromBitScreen = '/confromBitScreen';
-  static const String chatScreen = '/chatScreen';
-  static const String editProfileScreen = '/editProfileScreen';
-  static const String notificationSettingScreen = '/notificationSettingScreen';
-  static const String notificatioScreen = '/notificatioScreen';
-  static const String setPasswordScreen = '/setPasswordScreen';
-  //products_with_pagination
-  static const String productsWithPagination = '/ProductsWithPagination';
-  //ProductsScreen
-  static const String productsScreen = '/ProductsScreen';
-  //ProductDetailsScreen
-  static const String productDetailsScreen = '/ProductDetailsScreen';
 
-  // Main App Routes
-  static const String homeScreen = '/home_screen';
+  // Farmer Routes
+  static const String farmerNav = '/farmerNav';
 
-  static const String checkoutScreen = '/checkoutScreen';
-  static const String reviewPlanScreen = '/reviewPlanScreen';
-  static const String paymentConfirmScren = '/paymentConfirmScren';
-  static const String profileScreen = '/profileScreen';
-  static const String paymentSetting = '/paymentSetting';
-  static const String reviewScreen = '/reviewScreen';
-  static const String clientNavigationScreen = '/clientNavigationScreen';
-  static const String clientJobPostScreen = '/clientJobPostScreen';
-  static const String clientBitScreen = '/clientBitScreen';
-  static const String clientMessageProfileScreen =
-      '/clientMessageProfileScreen';
-  static const String clientQuotesScreen = '/clientQuotesScreen';
-  static const String constractorProfileScreen = '/constractorProfileScreen';
+  // Buyer Routes
+  static const String buyerNav = '/buyerNav';
 }
 
 final class RouteGenerator {
@@ -68,6 +35,22 @@ final class RouteGenerator {
             ? CupertinoPageRoute(builder: (context) => const LoginScreen())
             : _FadedTransitionRoute(
                 widget: const LoginScreen(),
+                settings: settings,
+              );
+
+      case Routes.farmerNav:
+        return defaultTargetPlatform == TargetPlatform.iOS
+            ? CupertinoPageRoute(builder: (context) => const FarmerNav())
+            : _FadedTransitionRoute(
+                widget: const FarmerNav(),
+                settings: settings,
+              );
+
+      case Routes.buyerNav:
+        return defaultTargetPlatform == TargetPlatform.iOS
+            ? CupertinoPageRoute(builder: (context) => const BuyerNav())
+            : _FadedTransitionRoute(
+                widget: const BuyerNav(),
                 settings: settings,
               );
 

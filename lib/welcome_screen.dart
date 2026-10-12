@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'gen/assets.gen.dart';
+import 'package:krishi_connect/gen/assets.gen.dart';
 
 final class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
