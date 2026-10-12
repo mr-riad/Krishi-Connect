@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../gen/colors.gen.dart';
 
 class FarmerScreen extends StatelessWidget {
   const FarmerScreen({super.key});
 
-  static const Color primaryGreen = Color(0xFF1E633F);
-  static const Color bgColor = Color(0xFFF4F6F0);
+  static const Color primaryGreen = AppColors.primaryGreen;
+  static const Color bgColor = AppColors.bgColor;
 
   final List<Map<String, dynamic>> services = const [
     {

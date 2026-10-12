@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:krishi_connect/features/buyer/product_upload_screen.dart';
+import 'package:krishi_connect/features/buyer/farmer_crops_screen.dart';
 
+import '../../constants/text_font_style.dart';
+import '../../gen/colors.gen.dart';
 import 'buyer_home_screen.dart';
 
 class BuyerNav extends StatefulWidget {
@@ -13,7 +17,7 @@ class BuyerNav extends StatefulWidget {
 class _BuyerNavState extends State<BuyerNav> {
   int _currentIndex = 0;
 
-  static const Color primaryGreen = Color(0xFF1E633F);
+  static const Color primaryGreen = AppColors.primaryGreen;
 
   late final List<Widget> _pages;
 
@@ -22,8 +26,8 @@ class _BuyerNavState extends State<BuyerNav> {
     super.initState();
     _pages = [
       const BuyerHomeScreen(),
-      _buildPlaceholderScreen("আমার দর"),
-      _buildPlaceholderScreen("ফসল খুঁজুন"),
+      ProductUploadScreen(onBack: () => setState(() => _currentIndex = 0)),
+      FarmerCropsScreen(onBack: () => setState(() => _currentIndex = 0)),
       _buildPlaceholderScreen("চ্যাট"),
       _buildPlaceholderScreen("প্রোফাইল"),
     ];
@@ -31,18 +35,14 @@ class _BuyerNavState extends State<BuyerNav> {
 
   Widget _buildPlaceholderScreen(String title) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F0),
+      backgroundColor: AppColors.bgColor,
       appBar: AppBar(
         title: Text(
           title,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF111827),
-          ),
+          style: TextFontStyle.textStyle18c111827Outfit700,
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceColor,
         elevation: 0.5,
       ),
       body: Center(
@@ -59,20 +59,37 @@ class _BuyerNavState extends State<BuyerNav> {
   }
 
   final List<Map<String, dynamic>> _navItems = const [
-    {"label": "হোম", "icon": Icons.home_rounded, "unselectedIcon": Icons.home_outlined},
-    {"label": "আমার দর", "icon": Icons.receipt_long_rounded, "unselectedIcon": Icons.receipt_long_outlined},
-    {"label": "ফসল খুঁজুন", "icon": Icons.search_rounded, "unselectedIcon": Icons.search_outlined},
-    {"label": "চ্যাট", "icon": Icons.chat_bubble_rounded, "unselectedIcon": Icons.chat_bubble_outline_rounded},
-    {"label": "প্রোফাইল", "icon": Icons.person_rounded, "unselectedIcon": Icons.person_outline_rounded},
+    {
+      "label": "হোম",
+      "icon": Icons.home_rounded,
+      "unselectedIcon": Icons.home_outlined,
+    },
+    {
+      "label": "আমার দর",
+      "icon": Icons.receipt_long_rounded,
+      "unselectedIcon": Icons.receipt_long_outlined,
+    },
+    {
+      "label": "ফসল খুঁজুন",
+      "icon": Icons.search_rounded,
+      "unselectedIcon": Icons.search_outlined,
+    },
+    {
+      "label": "চ্যাট",
+      "icon": Icons.chat_bubble_rounded,
+      "unselectedIcon": Icons.chat_bubble_outline_rounded,
+    },
+    {
+      "label": "প্রোফাইল",
+      "icon": Icons.person_rounded,
+      "unselectedIcon": Icons.person_outline_rounded,
+    },
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -102,9 +119,14 @@ class _BuyerNavState extends State<BuyerNav> {
                   borderRadius: BorderRadius.circular(16.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 6.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFF0FDF4) : Colors.transparent,
+                      color: isSelected
+                          ? const Color(0xFFF0FDF4)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                     child: Column(
@@ -114,7 +136,9 @@ class _BuyerNavState extends State<BuyerNav> {
                           isSelected
                               ? item["icon"] as IconData
                               : item["unselectedIcon"] as IconData,
-                          color: isSelected ? primaryGreen : const Color(0xFF9CA3AF),
+                          color: isSelected
+                              ? primaryGreen
+                              : const Color(0xFF9CA3AF),
                           size: 24.sp,
                         ),
                         SizedBox(height: 3.h),
@@ -122,8 +146,12 @@ class _BuyerNavState extends State<BuyerNav> {
                           item["label"] as String,
                           style: TextStyle(
                             fontSize: 11.sp,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? primaryGreen : const Color(0xFF6B7280),
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? primaryGreen
+                                : const Color(0xFF6B7280),
                           ),
                         ),
                         if (isSelected)

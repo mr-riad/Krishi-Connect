@@ -12,7 +12,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../constants/text_font_style.dart';
-import '../constants/app_colors.dart';
+import '../gen/colors.gen.dart';
 import 'di.dart';
 import '../constants/app_constants.dart';
 

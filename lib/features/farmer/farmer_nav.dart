@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../constants/text_font_style.dart';
+import '../../gen/colors.gen.dart';
 
 import 'farmer_screen.dart';
 
@@ -13,7 +15,7 @@ class FarmerNav extends StatefulWidget {
 class _FarmerNavState extends State<FarmerNav> {
   int _currentIndex = 0;
 
-  static const Color primaryGreen = Color(0xFF1E633F);
+  static const Color primaryGreen = AppColors.primaryGreen;
 
   late final List<Widget> _pages;
 
@@ -31,18 +33,14 @@ class _FarmerNavState extends State<FarmerNav> {
 
   Widget _buildPlaceholderScreen(String title) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F0),
+      backgroundColor: AppColors.bgColor,
       appBar: AppBar(
         title: Text(
           title,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF111827),
-          ),
+          style: TextFontStyle.textStyle18c111827Outfit700,
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceColor,
         elevation: 0.5,
       ),
       body: Center(

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:krishi_connect/gen/colors.gen.dart';
+
+import '../../constants/app_colors.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
   const BuyerHomeScreen({super.key});
 
-  static const Color primaryGreen = Color(0xFF1E633F);
-  static const Color bgColor = Color(0xFFF4F6F0);
+  static const Color primaryGreen = AppColors.primaryGreen;
+  static const Color bgColor = AppColors.bgColor;
 
   final List<Map<String, String>> rateBoardItems = const [
     {"crop": "আলু (ডায়মন্ড)", "rate": "৳ ৩৫/কেজি", "demand": "চাহিদা ৫০০ কেজি"},

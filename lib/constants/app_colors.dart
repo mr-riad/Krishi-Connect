@@ -1,3 +1,1 @@
-import '../gen/colors.gen.dart';
-
-typedef AppColors = ColorName;
+export '../gen/colors.gen.dart';

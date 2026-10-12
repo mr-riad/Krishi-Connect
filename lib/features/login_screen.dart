@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../constants/app_constants.dart';
+import '../gen/colors.gen.dart';
 import '../gen/assets.gen.dart';
 import '../helpers/all_routes.dart';
 import '../helpers/di.dart';
@@ -28,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _verificationId;
   ConfirmationResult? _webConfirmationResult;
 
-  static const Color primaryGreen = Color(0xFF1E633F);
-  static const Color bgColor = Color(0xFFF4F6F0);
+  static const Color primaryGreen = AppColors.primaryGreen;
+  static const Color bgColor = AppColors.bgColor;
 
   @override
   void dispose() {
