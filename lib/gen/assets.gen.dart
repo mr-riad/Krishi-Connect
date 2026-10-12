@@ -24,17 +24,19 @@ class $AssetsColorGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// File path: assets/images/krishi_connect_logo.png
+  AssetGenImage get krishiConnectLogo =>
+      const AssetGenImage('assets/images/krishi_connect_logo.png');
+
   /// File path: assets/images/splash_screen.png
   AssetGenImage get splashScreen =>
       const AssetGenImage('assets/images/splash_screen.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [splashScreen];
+  List<AssetGenImage> get values => [krishiConnectLogo, splashScreen];
 }
 
-class Assets {
-  const Assets._();
-
+abstract final class Assets {
   static const $AssetsColorGen color = $AssetsColorGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
 }

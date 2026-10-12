@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
+
 import 'constants/custome_theme.dart';
-import 'constants/app_colors.dart';
+import 'gen/colors.gen.dart';
 import 'helpers/all_routes.dart';
 import 'helpers/di.dart';
 import 'helpers/helper_methods.dart';
@@ -14,6 +18,7 @@ import 'networks/dio/dio.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   //await _requestPermissions();
   await GetStorage.init();
   diSetup();
@@ -64,12 +69,13 @@ class UtillScreenMobile extends StatelessWidget {
           },
           child: MaterialApp(
             theme: ThemeData(
-              unselectedWidgetColor: Colors.white,
+              unselectedWidgetColor: AppColors.cFFFFFF,
+              primaryColor: AppColors.primaryGreen,
               primarySwatch: CustomTheme.kToDark,
               useMaterial3: false,
-              scaffoldBackgroundColor: AppColors.cFFFFFF,
+              scaffoldBackgroundColor: AppColors.scaffoldColor,
               appBarTheme: const AppBarTheme(
-                backgroundColor: AppColors.cFFFFFF,
+                backgroundColor: AppColors.surfaceColor,
                 elevation: 0,
               ),
             ),

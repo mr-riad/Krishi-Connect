@@ -48,6 +48,11 @@ dependencies:
   smooth_page_indicator: ^3.0.0
   dotted_border: ^3.1.0
   image_picker: ^1.2.4
+  flutter_gen_core: ^5.15.0
+  firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
+  firebase_storage: ^13.6.0
 
 dev_dependencies:
   flutter_test:
@@ -60,7 +65,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   build_runner: ^2.16.2
-  flutter_gen_runner: ^5.13.0+1
+  flutter_gen_runner: ^5.15.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,3 +97,5 @@ flutter_gen:
   colors:
     inputs:
       - assets/color/colors.xml
+    outputs:
+      class_name: AppColors

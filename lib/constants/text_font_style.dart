@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'app_colors.dart';
+import '../gen/colors.gen.dart';
 
 class TextFontStyle {
-  //Initialising Constractor
+  // Initialising Constructor
   TextFontStyle._();
 
-  //Splash & Onboarding Screens
+  // Splash & Onboarding Screens (DMSans)
   static final textStyle28cFFFFFFDMSans900 = TextStyle(
     fontFamily: "DMSans",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
@@ -15,6 +15,7 @@ class TextFontStyle {
     fontSize: 28.sp,
     fontWeight: FontWeight.w900,
   );
+
   static final textStyle11c606060DMSans400 = TextStyle(
     fontFamily: "DMSans",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
@@ -22,90 +23,8 @@ class TextFontStyle {
     fontSize: 11.sp,
     fontWeight: FontWeight.w400,
   );
-  static final textStyle20c000000Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c000000,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle24c000000Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c000000,
-    fontSize: 24.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle12c8C8C8COutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c0A0A0AOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c0A0A0A,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle18c1F1F1FOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c1F1F1F,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c000000Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c000000,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle18cFFFFFFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c2563EBOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2563EB,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle24c1F1F1FOutfit600 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c1F1F1F,
-    fontSize: 24.sp,
-    fontWeight: FontWeight.w600,
-  );
-  static final textStyle14c595959Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c595959,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16c0A0A0AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c0A0A0A,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c0A0A0AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c0A0A0A,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
+
+  // Common Outfit Styles (Size + Color + Font + Weight)
   static final textStyle30c000000Outfit500 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
@@ -113,487 +32,189 @@ class TextFontStyle {
     fontSize: 30.sp,
     fontWeight: FontWeight.w500,
   );
-  static final textStyle16c595959Outfit400 = TextStyle(
+
+  static final textStyle28c111827Outfit800 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c595959,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
+    color: AppColors.c111827,
+    fontSize: 28.sp,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.2,
   );
-  static final textStyle16c262626Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c595959,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c2D3748Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2D3748,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16c141414Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle20cBFBFBFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cBFBFBF,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c8C8C8COutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16c141414Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle18c1A46A7Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c1A46A7,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle18c595959Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c595959,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c202020Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle16c202020Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle10c8C8C8COutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle10c454545Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c454545,
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle10c364153Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c364153,
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle20c141414Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle18c0A0A0AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c0A0A0A,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle12c99A1AFOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c99A1AF,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle12c5182EFOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c5182EF,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle18c000000Outfit500 = TextStyle(
+
+  static final textStyle24c000000Outfit500 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
     color: AppColors.c000000,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle10c2563EBOutfit600 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2563EB,
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w600,
-  );
-  static final textStyle18cFFFFFFOutfit600 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w600,
-  );
-  static final textStyle10c2563EBOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2563EB,
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle16c454545Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c454545,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16cEF4343Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cEF4343,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16c16A34AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c16A34A,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16cFFFFFFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle18c202020Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c4A5565Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c4A5565,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14cBFBFBFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cBFBFBF,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c8C8C8COutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle20c202020Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle12c8C8C8COutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle16cBABABAOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cBABABA,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c202020Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle12c989898Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c989898,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c1F1F1FOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c1F1F1F,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c595959Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c595959,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14cD32232Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cD32232,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle24cFFFFFFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
     fontSize: 24.sp,
     fontWeight: FontWeight.w500,
   );
-  static final textStyle14cBBCFF9Outfit400 = TextStyle(
+
+  static final textStyle24c111827Outfit700 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cBBCFF9,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
+    color: AppColors.c111827,
+    fontSize: 24.sp,
+    fontWeight: FontWeight.w700,
   );
-  static final textStyle14cEF4444Outfit400 = TextStyle(
+
+  static final textStyle22c111827Outfit700 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cEF4444,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14cFFFFFFOutfit600 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w600,
-  );
-  static final textStyle14c141414Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle20c2563EBOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2563EB,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14cFFFFFFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cFFFFFF,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle14c2563EBOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c2563EB,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec14c202020Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStylec14c989898Outfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c989898,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStylec20c202020Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec20c141414Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec16c202020Outfit600 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c202020,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w600,
-  );
-  static final textStylec14c808080Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c808080,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec14c00E818Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c00E818,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec14c6A6A6AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c6A6A6A,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStylec14c141414Outfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c141414,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle22c6461FCOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c6461FC,
+    color: AppColors.c111827,
     fontSize: 22.sp,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w700,
   );
-  static final textStyle14c1F1F1FOutfit400 = TextStyle(
+
+  static final textStyle20c000000Outfit500 = TextStyle(
     fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c1F1F1F,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle14c6A6A6AOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c6A6A6A,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-  );
-  static final textStyle16c5182EFOutfit500 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c5182EF,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStylec14c000000Poppins500 = TextStyle(
-    fontFamily: "Poppins",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
     color: AppColors.c000000,
-    fontSize: 14.sp,
+    fontSize: 20.sp,
     fontWeight: FontWeight.w500,
   );
-  static final textStylec16c808080Poppins500 = TextStyle(
-    fontFamily: "Poppins",
+
+  static final textStyle20c111827Outfit700 = TextStyle(
+    fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c808080,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
+    color: AppColors.c111827,
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w700,
   );
-  static final textStyle20cFFFFFFOutfit500 = TextStyle(
+
+  static final textStyle18c111827Outfit700 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c111827,
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w700,
+  );
+
+  static final textStyle18c111827Outfit600 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c111827,
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w600,
+  );
+
+  static final textStyle16cFFFFFFOutfit700 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
     color: AppColors.cFFFFFF,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static final textStyle16cBFBFBFOutfit400 = TextStyle(
-    fontFamily: "Outfit",
-    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cBFBFBF,
     fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w700,
   );
-  static final textStyle20c0A0A0AOutfit400 = TextStyle(
+
+  static final textStyle16c111827Outfit600 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c0A0A0A,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w400,
+    color: AppColors.c111827,
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
   );
-  static final textStyle14c364153Outfit400 = TextStyle(
+
+  static final textStyle16c1F2937Outfit600 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c364153,
+    color: AppColors.c1F2937,
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+  );
+
+  static final textStyle15cFFFFFFOutfit700 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.cFFFFFF,
+    fontSize: 15.sp,
+    fontWeight: FontWeight.w700,
+  );
+
+  static final textStyle15c374151Outfit700 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c374151,
+    fontSize: 15.sp,
+    fontWeight: FontWeight.w700,
+  );
+
+  static final textStyle14c111827Outfit600 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c111827,
     fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w600,
   );
-  static final textStyle16c8C8C8COutfit500 = TextStyle(
+
+  static final textStyle14c374151Outfit600 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c8C8C8C,
-    fontSize: 16.sp,
+    color: AppColors.c374151,
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w600,
+  );
+
+  static final textStyle14c4B5563Outfit500 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c4B5563,
+    fontSize: 14.sp,
     fontWeight: FontWeight.w500,
   );
-  static final textStyle12c006B0BOutfit400 = TextStyle(
+
+  static final textStyle14c4B5563Outfit400 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c006B0B,
+    color: AppColors.c4B5563,
+    fontSize: 14.sp,
+    fontWeight: FontWeight.normal,
+  );
+
+  static final textStyle14c9CA3AFOutfit400 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c9CA3AF,
+    fontSize: 14.sp,
+    fontWeight: FontWeight.normal,
+  );
+
+  static final textStyle13c6B7280Outfit400 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c6B7280,
+    fontSize: 13.sp,
+    fontWeight: FontWeight.normal,
+  );
+
+  static final textStyle12c6B7280Outfit500 = TextStyle(
+    fontFamily: "Outfit",
+    fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
+    color: AppColors.c6B7280,
     fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
   );
-  static final textStyle16c225AD6Outfit400 = TextStyle(
+
+  static final textStyle12c1E633FOutfit600 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.c225AD6,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
+    color: AppColors.primaryGreen,
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w600,
   );
-  static final textStyle16cDC2626Outfit400 = TextStyle(
+
+  static final textStyle12c92400EOutfit600 = TextStyle(
     fontFamily: "Outfit",
     fontFamilyFallback: const ['Open Sans', 'Roboto', 'Noto Sans'],
-    color: AppColors.cDC2626,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
+    color: AppColors.c92400E,
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w600,
   );
+
+  // Semantic Aliases for easy access
+  static final headlineBold = textStyle22c111827Outfit700;
+  static final titleMedium = textStyle16c1F2937Outfit600;
+  static final labelMedium = textStyle14c374151Outfit600;
+  static final bodyRegular = textStyle14c4B5563Outfit400;
+  static final hintRegular = textStyle14c9CA3AFOutfit400;
+  static final buttonBold = textStyle16cFFFFFFOutfit700;
 }
