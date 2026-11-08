@@ -41,7 +41,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "type": "vegetable",
     },
     {
-      "crop": "দেশি পেঁয়াজ",
+      "crop": "দেশি পেঁয়াজ",
       "quantity": "২০০ কেজি",
       "farmer": "জামাল উদ্দিন",
       "location": "ঈশ্বরদী",
@@ -51,7 +51,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
     {
       "crop": "পাকা টমেটো",
       "quantity": "১৫০ কেজি",
-      "farmer": "করিম মিয়া",
+      "farmer": "করিম মিয়া",
       "location": "পবা",
       "expectedPrice": "৪০",
       "type": "vegetable",
@@ -72,7 +72,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
     return _allCrops.where((item) => item["type"] == type).toList();
   }
 
-  void _openChatDialog(Map<String, String> crop) {
+  void _openCallDialog(Map<String, String> crop) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -90,7 +90,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "চ্যাট শুরু করুন",
+                    "কল করুন",
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w800,
@@ -126,14 +126,14 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          "${crop["farmer"]}-এর সাথে বার্তা পাঠানো হয়েছে",
+                          "${crop["farmer"]}-কে কল করা হচ্ছে...",
                         ),
                         backgroundColor: primaryGreen,
                       ),
                     );
                   },
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text("মেসেজ পাঠান"),
+                  icon: const Icon(Icons.phone_rounded),
+                  label: const Text("এখনই কল করুন"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
                     foregroundColor: Colors.white,
@@ -347,21 +347,22 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
           ),
           SizedBox(width: 12.w),
 
-          // Chat Button (Right)
-          ElevatedButton(
-            onPressed: () => _openChatDialog(crop),
+          // Call Button (Right)
+          ElevatedButton.icon(
+            onPressed: () => _openCallDialog(crop),
+            icon: Icon(Icons.phone_rounded, size: 16.sp),
+            label: Text(
+              "কল",
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryGreen,
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
-            ),
-            child: Text(
-              "চ্যাট",
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
             ),
           ),
         ],

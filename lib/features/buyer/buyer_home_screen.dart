@@ -5,15 +5,18 @@ import 'package:krishi_connect/gen/colors.gen.dart';
 import '../../constants/app_colors.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
-  const BuyerHomeScreen({super.key});
+  final VoidCallback? onGoToPost;
+  final VoidCallback? onGoToSearch;
+
+  const BuyerHomeScreen({super.key, this.onGoToPost, this.onGoToSearch});
 
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
   final List<Map<String, String>> rateBoardItems = const [
-    {"crop": "আলু (ডায়মন্ড)", "rate": "৳ ৩৫/কেজি", "demand": "চাহিদা ৫০০ কেজি"},
-    {"crop": "দেশি পেঁয়াজ", "rate": "৳ ৮০/কেজি", "demand": "চাহিদা ৩০০ কেজি"},
-    {"crop": "পাকা টমেটো", "rate": "৳ ৪৫/কেজি", "demand": "চাহিদা ২০০ কেজি"},
+    {'crop': 'আলু (ডায়মন্ড)', 'rate': '৳ ৩৫/কেজি', 'demand': 'চাহিদা ৫০০ কেজি'},
+    {'crop': 'দেশি পেঁয়াজ', 'rate': '৳ ৮০/কেজি', 'demand': 'চাহিদা ৩০০ কেজি'},
+    {'crop': 'পাকা টমেটো', 'rate': '৳ ৪৫/কেজি', 'demand': 'চাহিদা ২০০ কেজি'},
   ];
 
   @override
@@ -36,7 +39,7 @@ class BuyerHomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "আসসালামু আলাইকুম",
+                        'আসসালামু আলাইকুম',
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w500,
@@ -45,7 +48,7 @@ class BuyerHomeScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 2.h),
                       Text(
-                        "[ক্রেতার নাম]",
+                        'মো: আলম হোসেন',
                         style: TextStyle(
                           fontSize: 22.sp,
                           fontWeight: FontWeight.w800,
@@ -87,10 +90,10 @@ class BuyerHomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 52.h,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: onGoToPost,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
                   label: Text(
-                    "আজকের দর পোস্ট করুন",
+                    'আজকের দর পোস্ট করুন',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
@@ -107,9 +110,32 @@ class BuyerHomeScreen extends StatelessWidget {
                 ),
               ),
 
+              SizedBox(height: 12.h),
+
+              // Search Crops CTA
+              SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: OutlinedButton.icon(
+                  onPressed: onGoToSearch,
+                  icon: const Icon(Icons.search_rounded),
+                  label: Text(
+                    'কৃষকদের ফসল খুঁজুন',
+                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primaryGreen,
+                    side: const BorderSide(color: primaryGreen, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                ),
+              ),
+
               SizedBox(height: 16.h),
 
-              // Stats Row (সক্রিয় দর & নতুন বার্তা)
+              // Stats Row (সক্রিয় দর & নতুন বার্তা)
               Row(
                 children: [
                   Expanded(
@@ -133,21 +159,22 @@ class BuyerHomeScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "সক্রিয় দর",
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
-                            ),
-                          ),
+                          Icon(Icons.receipt_long_outlined,
+                              size: 18.sp, color: primaryGreen),
                           SizedBox(height: 6.h),
                           Text(
-                            "[সংখ্যা]",
+                            '৮',
                             style: TextStyle(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF111827),
+                            ),
+                          ),
+                          Text(
+                            'সক্রিয় দর',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -176,21 +203,22 @@ class BuyerHomeScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "নতুন বার্তা",
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
-                            ),
-                          ),
+                          Icon(Icons.chat_bubble_outline_rounded,
+                              size: 18.sp, color: primaryGreen),
                           SizedBox(height: 6.h),
                           Text(
-                            "[সংখ্যা]",
+                            '৩',
                             style: TextStyle(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF111827),
+                            ),
+                          ),
+                          Text(
+                            'নতুন বার্তা',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -204,7 +232,7 @@ class BuyerHomeScreen extends StatelessWidget {
 
               // Section: আমার দর বোর্ড
               Text(
-                "আমার দর বোর্ড",
+                'আমার দর বোর্ড',
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w800,
@@ -249,7 +277,7 @@ class BuyerHomeScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item["crop"] ?? "[ফসল]",
+                                item['crop'] ?? '[ফসল]',
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w700,
@@ -258,7 +286,7 @@ class BuyerHomeScreen extends StatelessWidget {
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                "${item["rate"]} · ${item["demand"]}",
+                                '${item['rate']} · ${item['demand']}',
                                 style: TextStyle(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w500,
@@ -268,7 +296,7 @@ class BuyerHomeScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Right: "সম্পাদনা" Button
+                        // Right: সম্পাদনা Button
                         ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(
@@ -284,7 +312,7 @@ class BuyerHomeScreen extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            "সম্পাদনা",
+                            'সম্পাদনা',
                             style: TextStyle(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w700,

@@ -1,50 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import 'farm_equipment_screen.dart';
+import 'farmer_community_screen.dart';
+import 'crop_calendar_screen.dart';
+import 'nearby_buyers_screen.dart';
+import 'agri_news_screen.dart';
 
 class FarmerScreen extends StatelessWidget {
-  const FarmerScreen({super.key});
+  final VoidCallback? onGoToPost;
+  final VoidCallback? onGoToBuyerRates;
+  final VoidCallback? onGoToAdvisory;
+
+  const FarmerScreen({
+    super.key,
+    this.onGoToPost,
+    this.onGoToBuyerRates,
+    this.onGoToAdvisory,
+  });
 
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
-  final List<Map<String, dynamic>> services = const [
-    {
-      "title": "ক্রেতার দর",
-      "icon": Icons.bar_chart_rounded,
-    },
-    {
-      "title": "কাছের ক্রেতা",
-      "icon": Icons.location_on_outlined,
-    },
-    {
-      "title": "রোগ নির্ণয়",
-      "icon": Icons.search_rounded,
-    },
-    {
-      "title": "সাথী ফসল",
-      "icon": Icons.eco_outlined,
-    },
-    {
-      "title": "ফসল ক্যালেন্ডার",
-      "icon": Icons.calendar_month_outlined,
-    },
-    {
-      "title": "কৃষি যন্ত্র",
-      "icon": Icons.agriculture_rounded,
-    },
-    {
-      "title": "সরকারি খবর",
-      "icon": Icons.feed_outlined,
-    },
-    {
-      "title": "কমিউনিটি",
-      "icon": Icons.chat_bubble_outline_rounded,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> services = [
+      {'title': 'ক্রেতার দর', 'icon': Icons.bar_chart_rounded, 'onTap': onGoToBuyerRates},
+      {
+        'title': 'কাছের ক্রেতা',
+        'icon': Icons.location_on_outlined,
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyBuyersScreen())),
+      },
+      {'title': 'রোগ নির্ণয়', 'icon': Icons.search_rounded, 'onTap': onGoToAdvisory},
+      {'title': 'সাথী ফসল', 'icon': Icons.eco_outlined, 'onTap': onGoToAdvisory},
+      {
+        'title': 'ফসল ক্যালেন্ডার',
+        'icon': Icons.calendar_month_outlined,
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CropCalendarScreen())),
+      },
+      {
+        'title': 'কৃষি যন্ত্র',
+        'icon': Icons.agriculture_rounded,
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmEquipmentScreen())),
+      },
+      {
+        'title': 'সরকারি খবর',
+        'icon': Icons.feed_outlined,
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AgriNewsScreen())),
+      },
+      {
+        'title': 'কমিউনিটি',
+        'icon': Icons.people_outline_rounded,
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmerCommunityScreen())),
+      },
+    ];
+
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
@@ -64,7 +74,7 @@ class FarmerScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "আসসালামু আলাইকুম",
+                          'আসসালামু আলাইকুম',
                           style: TextStyle(
                             fontSize: 13.sp,
                             fontWeight: FontWeight.w500,
@@ -73,7 +83,7 @@ class FarmerScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          "[কৃষকের নাম]",
+                          'মো: রফিকুল ইসলাম',
                           style: TextStyle(
                             fontSize: 22.sp,
                             fontWeight: FontWeight.w800,
@@ -90,7 +100,7 @@ class FarmerScreen extends StatelessWidget {
                             ),
                             SizedBox(width: 3.w),
                             Text(
-                              "[উপজেলা], [জেলা]",
+                              'বাগমারা, রাজশাহী',
                               style: TextStyle(
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w500,
@@ -130,7 +140,7 @@ class FarmerScreen extends StatelessWidget {
 
               SizedBox(height: 18.h),
 
-              // Weather Alert Card (আবহাওয়া সতর্কতা)
+              // Weather Alert Card
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
@@ -167,7 +177,7 @@ class FarmerScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "আবহাওয়া সতর্কতা",
+                            'আবহাওয়া সতর্কতা',
                             style: TextStyle(
                               fontSize: 15.sp,
                               fontWeight: FontWeight.w700,
@@ -176,7 +186,7 @@ class FarmerScreen extends StatelessWidget {
                           ),
                           SizedBox(height: 3.h),
                           Text(
-                            "আজ ভারী বৃষ্টির সম্ভাবনা। কাটা ফসল ঢেকে রাখুন।",
+                            'আজ ভারী বৃষ্টির সম্ভাবনা। কাটা ফসল ঢেকে রাখুন।',
                             style: TextStyle(
                               fontSize: 12.5.sp,
                               fontWeight: FontWeight.w500,
@@ -193,15 +203,15 @@ class FarmerScreen extends StatelessWidget {
 
               SizedBox(height: 16.h),
 
-              // Big CTA Button: আমার ফসল বিক্রির পোস্ট দিন
+              // Big CTA Button
               SizedBox(
                 width: double.infinity,
                 height: 52.h,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: onGoToPost,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
                   label: Text(
-                    "আমার ফসল বিক্রির পোস্ট দিন",
+                    'আমার ফসল বিক্রির পোস্ট দিন',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
@@ -222,7 +232,7 @@ class FarmerScreen extends StatelessWidget {
 
               // Section: সব সেবা
               Text(
-                "সব সেবা",
+                'সব সেবা',
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w800,
@@ -245,9 +255,10 @@ class FarmerScreen extends StatelessWidget {
                 ),
                 itemBuilder: (context, index) {
                   final service = services[index];
+                  final onTap = service['onTap'] as VoidCallback?;
                   return InkWell(
                     borderRadius: BorderRadius.circular(14.r),
-                    onTap: () {},
+                    onTap: onTap,
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                       decoration: BoxDecoration(
@@ -272,14 +283,14 @@ class FarmerScreen extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              service["icon"] as IconData,
+                              service['icon'] as IconData,
                               color: primaryGreen,
                               size: 24.sp,
                             ),
                           ),
                           SizedBox(height: 6.h),
                           Text(
-                            service["title"] as String,
+                            service['title'] as String,
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
