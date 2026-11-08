@@ -22,7 +22,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
       'date': '১০ অক্টোবর',
       'status': 'সক্রিয়',
       'views': '১২',
-      'chats': '৩',
+      'calls': '৩',
     },
     {
       'crop': 'গোল আলু',
@@ -32,7 +32,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
       'date': '০৫ অক্টোবর',
       'status': 'সক্রিয়',
       'views': '৮',
-      'chats': '১',
+      'calls': '১',
     },
     {
       'crop': 'পাকা টমেটো',
@@ -42,7 +42,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
       'date': '০১ অক্টোবর',
       'status': 'মেয়াদ শেষ',
       'views': '২৫',
-      'chats': '৭',
+      'calls': '৭',
     },
   ];
 
@@ -126,9 +126,9 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
                   ),
                   SizedBox(width: 12.w),
                   _buildStatCard(
-                    'মোট চ্যাট',
-                    _myPosts.fold(0, (sum, p) => sum + int.parse(p['chats'].toString().replaceAll('৳', ''))).toString(),
-                    Icons.chat_bubble_outline_rounded,
+                    'মোট কল',
+                    _myPosts.fold(0, (sum, p) => sum + int.parse(p['calls'].toString().replaceAll('৳', ''))).toString(),
+                    Icons.phone_in_talk_rounded,
                   ),
                 ],
               ),
@@ -239,11 +239,11 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
                                         fontSize: 12.sp, color: const Color(0xFF9CA3AF)),
                                   ),
                                   SizedBox(width: 14.w),
-                                  Icon(Icons.chat_bubble_outline_rounded,
+                                  Icon(Icons.phone_in_talk_rounded,
                                       size: 14.sp, color: const Color(0xFF9CA3AF)),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    '${post['chats']} চ্যাট',
+                                    '${post['calls']} কল',
                                     style: TextStyle(
                                         fontSize: 12.sp, color: const Color(0xFF9CA3AF)),
                                   ),

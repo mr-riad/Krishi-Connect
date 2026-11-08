@@ -135,7 +135,7 @@ class BuyerHomeScreen extends StatelessWidget {
 
               SizedBox(height: 16.h),
 
-              // Stats Row (সক্রিয় দর & নতুন বার্তা)
+              // Stats Row (সক্রিয় দর & সরাসরি কল)
               Row(
                 children: [
                   Expanded(
@@ -183,45 +183,49 @@ class BuyerHomeScreen extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 14.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.chat_bubble_outline_rounded,
-                              size: 18.sp, color: primaryGreen),
-                          SizedBox(height: 6.h),
-                          Text(
-                            '৩',
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF111827),
+                    child: InkWell(
+                      onTap: onGoToSearch,
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 14.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                          Text(
-                            'নতুন বার্তা',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: const Color(0xFF6B7280),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.phone_in_talk_rounded,
+                                size: 18.sp, color: primaryGreen),
+                            SizedBox(height: 6.h),
+                            Text(
+                              '১৫',
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF111827),
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              'সরাসরি কল',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

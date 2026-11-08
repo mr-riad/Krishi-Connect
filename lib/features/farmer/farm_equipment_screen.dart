@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import '../../helpers/call_helper.dart';
 
 class FarmEquipmentScreen extends StatefulWidget {
   const FarmEquipmentScreen({super.key});
@@ -24,6 +25,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৮০০',
       'unit': 'বিঘা/দিন',
       'type': 0,
+      'phone': '01712-345678',
       'available': true,
     },
     {
@@ -33,6 +35,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৭৫০',
       'unit': 'বিঘা/দিন',
       'type': 0,
+      'phone': '01819-234567',
       'available': true,
     },
     {
@@ -42,6 +45,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৩,৫০০',
       'unit': 'বিঘা',
       'type': 1,
+      'phone': '01723-456789',
       'available': false,
     },
     {
@@ -51,6 +55,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৩,২০০',
       'unit': 'বিঘা',
       'type': 1,
+      'phone': '01918-765432',
       'available': true,
     },
     {
@@ -60,6 +65,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৪৫০',
       'unit': 'বিঘা/দিন',
       'type': 2,
+      'phone': '01714-223344',
       'available': true,
     },
     {
@@ -69,6 +75,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       'rate': '৪০০',
       'unit': 'বিঘা/দিন',
       'type': 2,
+      'phone': '01815-334455',
       'available': true,
     },
   ];
@@ -77,91 +84,13 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
       _equipment.where((e) => e['type'] == _selectedCategoryIndex).toList();
 
   void _showCallSheet(Map<String, dynamic> item) {
-    showModalBottomSheet(
+    showDirectCallBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                item['name'],
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-              SizedBox(height: 6.h),
-              Text(
-                'মালিক: ${item['owner']} · ${item['upazila']}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF4B5563),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                'ভাড়া: ৳${item['rate']} / ${item['unit']}',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: primaryGreen,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              SizedBox(
-                width: double.infinity,
-                height: 50.h,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${item['owner']}-কে কল করা হচ্ছে...'),
-                        backgroundColor: primaryGreen,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.phone_rounded),
-                  label: Text(
-                    'এখনই কল করুন',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-            ],
-          ),
-        );
-      },
+      name: item['owner'] as String,
+      phone: (item['phone'] ?? '01712-345678') as String,
+      roleOrType: 'যন্ত্রের মালিক',
+      subtitle: "${item['name']} · ভাড়া: ৳${item['rate']} / ${item['unit']}",
+      location: item['upazila'] as String?,
     );
   }
 
@@ -336,7 +265,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                         GestureDetector(
                           onTap: () => _showCallSheet(item),
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                             decoration: BoxDecoration(
                               color: item['available'] as bool ? primaryGreen : Colors.grey.shade400,
                               borderRadius: BorderRadius.circular(10.r),
@@ -344,12 +273,12 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.phone_rounded, size: 14.sp, color: Colors.white),
+                                Icon(Icons.phone_in_talk_rounded, size: 14.sp, color: Colors.white),
                                 SizedBox(width: 4.w),
                                 Text(
-                                  'কল',
+                                  'সরাসরি কল',
                                   style: TextStyle(
-                                    fontSize: 13.sp,
+                                    fontSize: 12.sp,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),

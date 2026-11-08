@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import '../../helpers/call_helper.dart';
 
 class NearbyBuyersScreen extends StatefulWidget {
   const NearbyBuyersScreen({super.key});
@@ -26,7 +27,7 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
       'type': 'বাজার',
       'distance': '৩.৮',
       'crop': 'সব ধরনের ফসল',
-      'phone': '',
+      'phone': '০১৭১৫-১১২২৩৩',
     },
     {
       'name': 'আলম এন্টারপ্রাইজ',
@@ -40,7 +41,7 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
       'type': 'বাজার',
       'distance': '৬.৭',
       'crop': 'সব ধরনের ফসল',
-      'phone': '',
+      'phone': '০১৮১৬-২২৩৩৪৪',
     },
     {
       'name': 'করিম ফ্রেশ',
@@ -52,7 +53,8 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
   ];
 
   void _call(Map<String, dynamic> entry) {
-    if (entry['phone'] == '') {
+    final phone = entry['phone'] as String? ?? '';
+    if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${entry['name']}-এর যোগাযোগ নম্বর পাওয়া যায়নি'),
@@ -62,12 +64,13 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${entry['name']}-কে কল করা হচ্ছে: ${entry['phone']}'),
-        backgroundColor: primaryGreen,
-        behavior: SnackBarBehavior.floating,
-      ),
+    showDirectCallBottomSheet(
+      context: context,
+      name: entry['name'] as String,
+      phone: phone,
+      roleOrType: entry['type'] as String?,
+      subtitle: '${entry['crop']}',
+      location: '${entry['distance']} কিমি দূরত্ব',
     );
   }
 
@@ -265,7 +268,7 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
                         GestureDetector(
                           onTap: () => _call(entry),
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                             decoration: BoxDecoration(
                               color: primaryGreen,
                               borderRadius: BorderRadius.circular(10.r),
@@ -273,12 +276,12 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.phone_rounded, size: 14.sp, color: Colors.white),
+                                Icon(Icons.phone_in_talk_rounded, size: 14.sp, color: Colors.white),
                                 SizedBox(width: 4.w),
                                 Text(
-                                  'কল',
+                                  'সরাসরি কল',
                                   style: TextStyle(
-                                    fontSize: 13.sp,
+                                    fontSize: 12.sp,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:krishi_connect/features/login_screen.dart';
 import 'package:krishi_connect/helpers/all_routes.dart';
 import 'package:krishi_connect/helpers/navigation_service.dart';
 
@@ -94,7 +93,7 @@ class BuyerProfileScreen extends StatelessWidget {
                       children: [
                         _buildStat('৮', 'সক্রিয় দর'),
                         _buildDivider(),
-                        _buildStat('৪৫', 'মোট চ্যাট'),
+                        _buildStat('৪৫', 'মোট কল'),
                         _buildDivider(),
                         _buildStat('১২', 'কেনা ফসল'),
                       ],
