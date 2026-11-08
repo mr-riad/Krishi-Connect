@@ -95,7 +95,7 @@ class FarmerProfileScreen extends StatelessWidget {
                       children: [
                         _buildProfileStat('৫', 'মোট পোস্ট'),
                         _buildDivider(),
-                        _buildProfileStat('১২', 'মোট চ্যাট'),
+                        _buildProfileStat('১২', 'মোট কল'),
                         _buildDivider(),
                         _buildProfileStat('৩', 'সক্রিয়'),
                       ],

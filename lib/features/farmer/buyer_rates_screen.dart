@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import '../../helpers/call_helper.dart';
 
 class BuyerRatesScreen extends StatefulWidget {
   const BuyerRatesScreen({super.key});
@@ -25,6 +26,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '১০০০ কেজি',
       'location': 'রাজশাহী',
       'type': 'ধান',
+      'phone': '01711-123456',
       'isNew': true,
     },
     {
@@ -34,6 +36,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '৫০০ কেজি',
       'location': 'বগুড়া',
       'type': 'সবজি',
+      'phone': '01822-987654',
       'isNew': true,
     },
     {
@@ -43,6 +46,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '৩০০ কেজি',
       'location': 'পাবনা',
       'type': 'সবজি',
+      'phone': '01933-554433',
       'isNew': false,
     },
     {
@@ -52,6 +56,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '২০০ কেজি',
       'location': 'চাঁপাইনবাবগঞ্জ',
       'type': 'ফল',
+      'phone': '01714-223344',
       'isNew': false,
     },
     {
@@ -61,6 +66,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '৮০০ কেজি',
       'location': 'দিনাজপুর',
       'type': 'ধান',
+      'phone': '01815-334455',
       'isNew': false,
     },
     {
@@ -70,6 +76,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
       'demand': '২৫০ কেজি',
       'location': 'রংপুর',
       'type': 'সবজি',
+      'phone': '01716-445566',
       'isNew': false,
     },
   ];
@@ -81,93 +88,13 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
   }
 
   void _showContactSheet(Map<String, dynamic> rate) {
-    showModalBottomSheet(
+    showDirectCallBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                rate['buyer'],
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-              SizedBox(height: 6.h),
-              Text(
-                '${rate['crop']} · ৳${rate['rate']}/কেজি · ${rate['demand']}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF4B5563),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Row(
-                children: [
-                  Icon(Icons.location_on_outlined, size: 14.sp, color: const Color(0xFF6B7280)),
-                  SizedBox(width: 4.w),
-                  Text(
-                    rate['location'],
-                    style: TextStyle(fontSize: 13.sp, color: const Color(0xFF6B7280)),
-                  ),
-                ],
-              ),
-              SizedBox(height: 24.h),
-              SizedBox(
-                width: double.infinity,
-                height: 50.h,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${rate['buyer']}-কে কল করা হচ্ছে...'),
-                        backgroundColor: primaryGreen,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.phone_rounded),
-                  label: Text(
-                    'কল করুন',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-            ],
-          ),
-        );
-      },
+      name: rate['buyer'] as String,
+      phone: (rate['phone'] ?? '01711-123456') as String,
+      roleOrType: 'ক্রেতা',
+      subtitle: "${rate['crop']} · ৳${rate['rate']}/কেজি · ${rate['demand']}",
+      location: rate['location'] as String?,
     );
   }
 
@@ -351,7 +278,7 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
                         GestureDetector(
                           onTap: () => _showContactSheet(rate),
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                             decoration: BoxDecoration(
                               color: primaryGreen,
                               borderRadius: BorderRadius.circular(10.r),
@@ -359,12 +286,12 @@ class _BuyerRatesScreenState extends State<BuyerRatesScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.phone_rounded, size: 14.sp, color: Colors.white),
+                                Icon(Icons.phone_in_talk_rounded, size: 14.sp, color: Colors.white),
                                 SizedBox(width: 4.w),
                                 Text(
-                                  'কল',
+                                  'সরাসরি কল',
                                   style: TextStyle(
-                                    fontSize: 13.sp,
+                                    fontSize: 12.sp,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),

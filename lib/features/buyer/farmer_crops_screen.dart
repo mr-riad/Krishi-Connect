@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import '../../helpers/call_helper.dart';
 
 class FarmerCropsScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -31,6 +32,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "location": "বাগমারা",
       "expectedPrice": "৩৫",
       "type": "paddy",
+      "phone": "01712-345678",
     },
     {
       "crop": "গোল আলু",
@@ -39,6 +41,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "location": "শিবগঞ্জ",
       "expectedPrice": "২৫",
       "type": "vegetable",
+      "phone": "01819-234567",
     },
     {
       "crop": "দেশি পেঁয়াজ",
@@ -47,6 +50,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "location": "ঈশ্বরদী",
       "expectedPrice": "৭৫",
       "type": "vegetable",
+      "phone": "01723-456789",
     },
     {
       "crop": "পাকা টমেটো",
@@ -55,6 +59,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "location": "পবা",
       "expectedPrice": "৪০",
       "type": "vegetable",
+      "phone": "01914-567890",
     },
     {
       "crop": "আমন ধান",
@@ -63,6 +68,7 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
       "location": "দুপচাঁচিয়া",
       "expectedPrice": "৩৮",
       "type": "paddy",
+      "phone": "01735-678901",
     },
   ];
 
@@ -73,80 +79,13 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
   }
 
   void _openCallDialog(Map<String, String> crop) {
-    showModalBottomSheet(
+    showDirectCallBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      backgroundColor: Colors.white,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "কল করুন",
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF111827),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                "কৃষক: ${crop["farmer"]} (${crop["location"]})",
-                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                "ফসল: ${crop["crop"]} (${crop["quantity"]}) - আশা ৳${crop["expectedPrice"]}/কেজি",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF4B5563),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              SizedBox(
-                width: double.infinity,
-                height: 48.h,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "${crop["farmer"]}-কে কল করা হচ্ছে...",
-                        ),
-                        backgroundColor: primaryGreen,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.phone_rounded),
-                  label: const Text("এখনই কল করুন"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      name: crop["farmer"] ?? "কৃষক",
+      phone: crop["phone"] ?? "01712-345678",
+      roleOrType: "কৃষক",
+      subtitle: "${crop["crop"]} (${crop["quantity"]}) · আশা ৳${crop["expectedPrice"]}/কেজি",
+      location: crop["location"],
     );
   }
 
@@ -350,16 +289,16 @@ class _FarmerCropsScreenState extends State<FarmerCropsScreen> {
           // Call Button (Right)
           ElevatedButton.icon(
             onPressed: () => _openCallDialog(crop),
-            icon: Icon(Icons.phone_rounded, size: 16.sp),
+            icon: Icon(Icons.phone_in_talk_rounded, size: 16.sp),
             label: Text(
-              "কল",
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
+              "সরাসরি কল",
+              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryGreen,
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
