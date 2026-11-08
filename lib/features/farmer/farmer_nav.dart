@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../constants/text_font_style.dart';
 import '../../gen/colors.gen.dart';
 
 import 'farmer_screen.dart';
+import 'buyer_rates_screen.dart';
+import 'post_crop_screen.dart';
+import 'advisory_screen.dart';
+import 'farmer_profile_screen.dart';
 
 class FarmerNav extends StatefulWidget {
   const FarmerNav({super.key});
@@ -23,45 +26,24 @@ class _FarmerNavState extends State<FarmerNav> {
   void initState() {
     super.initState();
     _pages = [
-      const FarmerScreen(),
-      _buildPlaceholderScreen("ক্রেতার দর"),
-      _buildPlaceholderScreen("পোস্ট"),
-      _buildPlaceholderScreen("পরামর্শ"),
-      _buildPlaceholderScreen("প্রোফাইল"),
+      FarmerScreen(
+        onGoToPost: () => setState(() => _currentIndex = 2),
+        onGoToBuyerRates: () => setState(() => _currentIndex = 1),
+        onGoToAdvisory: () => setState(() => _currentIndex = 3),
+      ),
+      const BuyerRatesScreen(),
+      PostCropScreen(onBack: () => setState(() => _currentIndex = 0)),
+      const AdvisoryScreen(),
+      const FarmerProfileScreen(),
     ];
   }
 
-  Widget _buildPlaceholderScreen(String title) {
-    return Scaffold(
-      backgroundColor: AppColors.bgColor,
-      appBar: AppBar(
-        title: Text(
-          title,
-          style: TextFontStyle.textStyle18c111827Outfit700,
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.surfaceColor,
-        elevation: 0.5,
-      ),
-      body: Center(
-        child: Text(
-          "$title স্ক্রিন শীঘ্রই আসছে...",
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: const Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
   final List<Map<String, dynamic>> _navItems = const [
-    {"label": "হোম", "icon": Icons.home_rounded, "unselectedIcon": Icons.home_outlined},
-    {"label": "ক্রেতার দর", "icon": Icons.bar_chart_rounded, "unselectedIcon": Icons.bar_chart_outlined},
-    {"label": "পোস্ট", "icon": Icons.add_circle_rounded, "unselectedIcon": Icons.add_circle_outline_rounded},
-    {"label": "পরামর্শ", "icon": Icons.lightbulb_rounded, "unselectedIcon": Icons.lightbulb_outline_rounded},
-    {"label": "প্রোফাইল", "icon": Icons.person_rounded, "unselectedIcon": Icons.person_outline_rounded},
+    {'label': 'হোম', 'icon': Icons.home_rounded, 'unselectedIcon': Icons.home_outlined},
+    {'label': 'ক্রেতার দর', 'icon': Icons.bar_chart_rounded, 'unselectedIcon': Icons.bar_chart_outlined},
+    {'label': 'পোস্ট', 'icon': Icons.add_circle_rounded, 'unselectedIcon': Icons.add_circle_outline_rounded},
+    {'label': 'পরামর্শ', 'icon': Icons.lightbulb_rounded, 'unselectedIcon': Icons.lightbulb_outline_rounded},
+    {'label': 'প্রোফাইল', 'icon': Icons.person_rounded, 'unselectedIcon': Icons.person_outline_rounded},
   ];
 
   @override
@@ -110,14 +92,14 @@ class _FarmerNavState extends State<FarmerNav> {
                       children: [
                         Icon(
                           isSelected
-                              ? item["icon"] as IconData
-                              : item["unselectedIcon"] as IconData,
+                              ? item['icon'] as IconData
+                              : item['unselectedIcon'] as IconData,
                           color: isSelected ? primaryGreen : const Color(0xFF9CA3AF),
                           size: 24.sp,
                         ),
                         SizedBox(height: 3.h),
                         Text(
-                          item["label"] as String,
+                          item['label'] as String,
                           style: TextStyle(
                             fontSize: 11.sp,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

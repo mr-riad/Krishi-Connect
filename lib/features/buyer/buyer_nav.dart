@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:krishi_connect/features/buyer/product_upload_screen.dart';
 import 'package:krishi_connect/features/buyer/farmer_crops_screen.dart';
 
-import '../../constants/text_font_style.dart';
 import '../../gen/colors.gen.dart';
 import 'buyer_home_screen.dart';
+import 'buyer_profile_screen.dart';
 
 class BuyerNav extends StatefulWidget {
   const BuyerNav({super.key});
@@ -25,64 +25,36 @@ class _BuyerNavState extends State<BuyerNav> {
   void initState() {
     super.initState();
     _pages = [
-      const BuyerHomeScreen(),
+      BuyerHomeScreen(
+        onGoToPost: () => setState(() => _currentIndex = 1),
+        onGoToSearch: () => setState(() => _currentIndex = 2),
+      ),
       ProductUploadScreen(onBack: () => setState(() => _currentIndex = 0)),
       FarmerCropsScreen(onBack: () => setState(() => _currentIndex = 0)),
-      _buildPlaceholderScreen("চ্যাট"),
-      _buildPlaceholderScreen("প্রোফাইল"),
+      const BuyerProfileScreen(),
     ];
-  }
-
-  Widget _buildPlaceholderScreen(String title) {
-    return Scaffold(
-      backgroundColor: AppColors.bgColor,
-      appBar: AppBar(
-        title: Text(
-          title,
-          style: TextFontStyle.textStyle18c111827Outfit700,
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.surfaceColor,
-        elevation: 0.5,
-      ),
-      body: Center(
-        child: Text(
-          "$title স্ক্রিন শীঘ্রই আসছে...",
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: const Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
   }
 
   final List<Map<String, dynamic>> _navItems = const [
     {
-      "label": "হোম",
-      "icon": Icons.home_rounded,
-      "unselectedIcon": Icons.home_outlined,
+      'label': 'হোম',
+      'icon': Icons.home_rounded,
+      'unselectedIcon': Icons.home_outlined,
     },
     {
-      "label": "আমার দর",
-      "icon": Icons.receipt_long_rounded,
-      "unselectedIcon": Icons.receipt_long_outlined,
+      'label': 'আমার দর',
+      'icon': Icons.receipt_long_rounded,
+      'unselectedIcon': Icons.receipt_long_outlined,
     },
     {
-      "label": "ফসল খুঁজুন",
-      "icon": Icons.search_rounded,
-      "unselectedIcon": Icons.search_outlined,
+      'label': 'ফসল খুঁজুন',
+      'icon': Icons.search_rounded,
+      'unselectedIcon': Icons.search_outlined,
     },
     {
-      "label": "চ্যাট",
-      "icon": Icons.chat_bubble_rounded,
-      "unselectedIcon": Icons.chat_bubble_outline_rounded,
-    },
-    {
-      "label": "প্রোফাইল",
-      "icon": Icons.person_rounded,
-      "unselectedIcon": Icons.person_outline_rounded,
+      'label': 'প্রোফাইল',
+      'icon': Icons.person_rounded,
+      'unselectedIcon': Icons.person_outline_rounded,
     },
   ];
 
@@ -134,8 +106,8 @@ class _BuyerNavState extends State<BuyerNav> {
                       children: [
                         Icon(
                           isSelected
-                              ? item["icon"] as IconData
-                              : item["unselectedIcon"] as IconData,
+                              ? item['icon'] as IconData
+                              : item['unselectedIcon'] as IconData,
                           color: isSelected
                               ? primaryGreen
                               : const Color(0xFF9CA3AF),
@@ -143,7 +115,7 @@ class _BuyerNavState extends State<BuyerNav> {
                         ),
                         SizedBox(height: 3.h),
                         Text(
-                          item["label"] as String,
+                          item['label'] as String,
                           style: TextStyle(
                             fontSize: 11.sp,
                             fontWeight: isSelected
