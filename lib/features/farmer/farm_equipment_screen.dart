@@ -162,7 +162,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _categories.length,
-                separatorBuilder: (_, _) => SizedBox(width: 10.w),
+                separatorBuilder: (context, index) => SizedBox(width: 10.w),
                 itemBuilder: (context, index) {
                   final isSelected = _selectedCategoryIndex == index;
                   return InkWell(
@@ -198,7 +198,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _filtered.length,
-                separatorBuilder: (_, _) => SizedBox(height: 12.h),
+                separatorBuilder: (context, index) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {
                   final item = _filtered[index];
                   return Container(

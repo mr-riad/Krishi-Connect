@@ -1,9 +1,10 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:krishi_connect/features/login_screen.dart';
 
 import 'constants/app_constants.dart';
+import 'features/buyer/buyer_nav.dart';
+import 'features/farmer/farmer_nav.dart';
+import 'features/login_screen.dart';
 import 'helpers/di.dart';
 import 'helpers/helper_methods.dart';
 import 'helpers/post_login.dart';
@@ -19,59 +20,63 @@ final class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading> {
   bool _isLoading = true;
-  bool isFirstTime = true;
   Timer? _timer;
 
   @override
   void initState() {
+    super.initState();
     loadInitialData();
 
-    super.initState();
-    _timer = Timer(const Duration(seconds: 35), () {
-      if (_isLoading) {
-        // Only log out if internet is connected but loading is taking too long
-        _handleLogout();
+    _timer = Timer(const Duration(seconds: 15), () {
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
       }
     });
   }
 
-  // ignore: strict_top_level_inference
-  loadInitialData() async {
-    //AutoAppUpdateUtil.instance.checkAppUpdate();
-    await setInitValue();
-
-    if (appData.read(kKeyIsLoggedIn)) {
-      String token = appData.read(kKeyAccessToken);
-      DioSingleton.instance.update(token);
-      await performPostLoginActions();
-    } else {
-      //  NotificationService().cancelAllNotifications();
-    }
-    setState(() {
-      _timer!.cancel();
-      _isLoading = false;
-    });
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  void _handleLogout() {
-    appData.write(kKeyIsLoggedIn, false);
+  Future<void> loadInitialData() async {
+    try {
+      await setInitValue();
 
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => LogInScreen()),
-    // );
+      final bool isLoggedIn = appData.read(kKeyIsLoggedIn) == true;
+      if (isLoggedIn) {
+        final token = appData.read(kKeyAccessToken)?.toString() ?? '';
+        if (token.isNotEmpty) {
+          DioSingleton.instance.update(token);
+        }
+        await performPostLoginActions();
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _timer?.cancel();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const WelcomeScreen();
-    } else {
-      return appData.read(kKeyIsLoggedIn)
-          ? const LoginScreen()
-          : appData.read(kKeyfirstTime)
-          ? const LoginScreen()
-          : const LoginScreen();
     }
+
+    final bool isLoggedIn = appData.read(kKeyIsLoggedIn) == true;
+    if (isLoggedIn) {
+      final role = appData.read(selectedRole)?.toString();
+      if (role == 'buyer') {
+        return const BuyerNav();
+      }
+      return const FarmerNav();
+    }
+
+    return const LoginScreen();
   }
 }

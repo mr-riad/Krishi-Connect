@@ -1,4 +1,6 @@
+﻿// ignore_for_file: use_build_context_synchronously
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import '../helpers/all_routes.dart';
 import '../helpers/di.dart';
 import '../helpers/navigation_service.dart';
 import '../helpers/ui_helpers.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -91,19 +94,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (kIsWeb) {
-        // Firebase Web Auth
         _webConfirmationResult = await _auth.signInWithPhoneNumber(
           formattedPhone,
         );
         setState(() => _isLoading = false);
         _openOtpSheet(formattedPhone);
       } else {
-        // Android / iOS Auth
         await _auth.verifyPhoneNumber(
           phoneNumber: formattedPhone,
           timeout: const Duration(seconds: 60),
           verificationCompleted: (PhoneAuthCredential credential) async {
-            // Auto-retrieval or instant verification
             await _onSignInWithCredential(credential, formattedPhone);
           },
           verificationFailed: (FirebaseAuthException e) {
@@ -133,6 +133,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleUserLoggedIn(User user, String phone) async {
     try {
+      final token = await user.getIdToken();
+      if (token != null) {
+        appData.write(kKeyAccessToken, token);
+      }
+
       // Save user details to Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'uid': user.uid,
@@ -146,6 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
       appData.write(selectedRole, isFarmer ? 'farmer' : 'buyer');
       appData.write(kPhone, phone);
 
+      // Register / sync user profile with Krishi Connect backend
+      _syncProfileWithBackend(user, phone);
+
       if (!mounted) return;
       _showSuccess("লগইন সফল হয়েছে!");
 
@@ -157,6 +165,28 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       _showError("ডাটা সংরক্ষণ করতে সমস্যা হয়েছে: ${e.toString()}");
+    }
+  }
+
+  Future<void> _syncProfileWithBackend(User user, String phone) async {
+    try {
+      final token = await user.getIdToken();
+      final dio = Dio(BaseOptions(
+        baseUrl: 'https://krishi-connect-backend.onrender.com',
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
+      ));
+      await dio.put('/users/me', data: {
+        'phone': phone,
+        'role': isFarmer ? 'farmer' : 'buyer',
+      });
+    } catch (e) {
+      if (kDebugMode) print('[Krishi] Backend profile sync failed: $e');
     }
   }
 
@@ -364,6 +394,228 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Developer / Direct Token Login dialog
+  void _openTokenLoginDialog() {
+    final tokenCtrl = TextEditingController(
+      text: appData.read(kKeyAccessToken)?.toString() ?? (isFarmer ? 'farmer1' : 'buyer1'),
+    );
+    final nameCtrl = TextEditingController(
+      text: isFarmer ? 'মোঃ রফিকুল ইসলাম' : 'রহিম ট্রেডার্স',
+    );
+    final districtCtrl = TextEditingController(text: 'রাজশাহী');
+    bool isDialogFarmer = isFarmer;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20.w,
+                right: 20.w,
+                top: 24.h,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24.h,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Row(
+                      children: [
+                        Icon(Icons.vpn_key_rounded, color: primaryGreen, size: 24.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          "অথোরাইজ টোকেন দিয়ে লগইন",
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF111827),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      "ব্যাকএন্ডে সরাসরি কানেক্ট করার জন্য আপনার টোকেন বা UID দিন:",
+                      style: TextStyle(fontSize: 13.sp, color: const Color(0xFF6B7280)),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Role switch in dialog
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => setModalState(() => isDialogFarmer = true),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: isDialogFarmer ? primaryGreen : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "কৃষক",
+                                  style: TextStyle(
+                                    color: isDialogFarmer ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => setModalState(() => isDialogFarmer = false),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: !isDialogFarmer ? primaryGreen : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "ক্রেতা",
+                                  style: TextStyle(
+                                    color: !isDialogFarmer ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+
+                    Text("অথোরাইজেশন টোকেন / UID *",
+                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 6.h),
+                    TextField(
+                      controller: tokenCtrl,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: "Bearer Token বা Firebase ID Token লিখুন",
+                        hintStyle: TextStyle(fontSize: 12.sp),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                        contentPadding: EdgeInsets.all(12.w),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    Text("আপনার নাম *",
+                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 6.h),
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    Text("জেলা *",
+                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 6.h),
+                    TextField(
+                      controller: districtCtrl,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: ElevatedButton(
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                final token = tokenCtrl.text.trim();
+                                if (token.isEmpty) {
+                                  _showError("টোকেন লিখুন");
+                                  return;
+                                }
+
+                                setModalState(() => isSaving = true);
+
+                                // Save session
+                                appData.write(kKeyAccessToken, token);
+                                appData.write(kKeyIsLoggedIn, true);
+                                appData.write(selectedRole, isDialogFarmer ? 'farmer' : 'buyer');
+                                appData.write(kPhone, '01700000000');
+
+                                // Sync profile to backend
+                                try {
+                                  await KrishiApiService.instance.updateMe({
+                                    'role': isDialogFarmer ? 'farmer' : 'buyer',
+                                    'name': nameCtrl.text.trim(),
+                                    'district': districtCtrl.text.trim(),
+                                    'phone': '01700000000',
+                                  });
+                                } catch (_) {}
+
+                                if (!mounted) return;
+                                Navigator.pop(ctx);
+                                _showSuccess("সফলভাবে টোকেন দিয়ে লগইন হয়েছে!");
+
+                                if (isDialogFarmer) {
+                                  NavigationService.navigateToReplacement(Routes.farmerNav);
+                                } else {
+                                  NavigationService.navigateToReplacement(Routes.buyerNav);
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryGreen,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        ),
+                        child: isSaving
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "লগইন সম্পন্ন করুন",
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -375,12 +627,12 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               UIHelper.verticalSpaceSmall,
-              SizedBox(height: 35.h),
+              SizedBox(height: 25.h),
 
               // Logo container
               Container(
-                width: 96.w,
-                height: 96.w,
+                width: 90.w,
+                height: 90.w,
                 decoration: BoxDecoration(
                   color: primaryGreen,
                   borderRadius: BorderRadius.circular(24.r),
@@ -413,29 +665,29 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              UIHelper.verticalSpaceMedium,
+              UIHelper.verticalSpaceSmall,
 
               // App Name & Tagline
               Text(
                 "কৃষি কানেক্ট",
                 style: TextStyle(
-                  fontSize: 28.sp,
+                  fontSize: 26.sp,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF111827),
                   letterSpacing: 0.2,
                 ),
               ),
-              SizedBox(height: 6.h),
+              SizedBox(height: 4.h),
               Text(
                 "কৃষক ও ক্রেতার সরাসরি যোগাযোগ",
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF4B5563),
                 ),
               ),
 
-              SizedBox(height: 36.h),
+              SizedBox(height: 28.h),
 
               // Role Selector Toggle (আমি কৃষক / আমি ক্রেতা)
               Row(
@@ -446,7 +698,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () => setState(() => isFarmer = true),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
                         decoration: BoxDecoration(
                           color: isFarmer ? primaryGreen : Colors.white,
                           borderRadius: BorderRadius.circular(30.r),
@@ -488,7 +740,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () => setState(() => isFarmer = false),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
                         decoration: BoxDecoration(
                           color: !isFarmer ? primaryGreen : Colors.white,
                           borderRadius: BorderRadius.circular(30.r),
@@ -526,7 +778,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
 
-              SizedBox(height: 28.h),
+              SizedBox(height: 22.h),
 
               // Mobile Input Label
               Align(
@@ -584,12 +836,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              SizedBox(height: 24.h),
+              SizedBox(height: 20.h),
 
-              // Submit Button
+              // Submit Button (OTP)
               SizedBox(
                 width: double.infinity,
-                height: 52.h,
+                height: 50.h,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleSendOtp,
                   style: ElevatedButton.styleFrom(
@@ -620,7 +872,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              SizedBox(height: 30.h),
+              SizedBox(height: 18.h),
+
+              // Token / Developer Login Button
+              TextButton.icon(
+                onPressed: _openTokenLoginDialog,
+                icon: Icon(Icons.vpn_key_outlined, size: 18.sp, color: primaryGreen),
+                label: Text(
+                  "অথোরাইজ টোকেন দিয়ে সরাসরি লগইন করুন",
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: primaryGreen,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 24.h),
             ],
           ),
         ),

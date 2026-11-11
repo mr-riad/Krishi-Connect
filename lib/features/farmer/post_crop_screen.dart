@@ -1,6 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../gen/colors.gen.dart';
+import '../../services/api_service.dart';
 
 class PostCropScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -17,59 +25,184 @@ class _PostCropScreenState extends State<PostCropScreen> {
   final _cropNameController = TextEditingController();
   final _quantityController = TextEditingController();
   final _priceController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _upazilaController = TextEditingController();
   final _descController = TextEditingController();
 
-  String _selectedUnit = 'কেজি';
-  final List<String> _units = ['কেজি', 'মণ', 'টন', 'বস্তা'];
+  final ImagePicker _picker = ImagePicker();
+  XFile? _selectedImage;
 
+  // unit mapping: display → API value
+  final Map<String, String> _unitMap = {
+    'কেজি': 'kg',
+    'মণ': 'mon',
+    'টন': 'ton',
+    'বস্তা': 'bag',
+  };
+
+  // category mapping: display → API value
+  final Map<String, String> _categoryMap = {
+    'ধান': 'paddy',
+    'সবজি': 'vegetable',
+    'ফল': 'fruit',
+    'ডাল': 'pulse',
+    'মসলা': 'spice',
+    'অন্যান্য': 'other',
+  };
+
+  String _selectedUnit = 'কেজি';
+  String _selectedCategory = 'অন্যান্য';
   bool _isSubmitting = false;
+  String? _errorMsg;
 
   @override
   void dispose() {
     _cropNameController.dispose();
     _quantityController.dispose();
     _priceController.dispose();
-    _locationController.dispose();
+    _districtController.dispose();
+    _upazilaController.dispose();
     _descController.dispose();
     super.dispose();
   }
 
-  void _handleSubmit() async {
-    if (_cropNameController.text.trim().isEmpty ||
-        _quantityController.text.trim().isEmpty ||
-        _priceController.text.trim().isEmpty) {
+  Future<void> _pickImage() async {
+    try {
+      final img = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (img != null) {
+        setState(() => _selectedImage = img);
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error picking image: $e');
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    final cropName = _cropNameController.text.trim();
+    final quantityStr = _quantityController.text.trim();
+    final priceStr = _priceController.text.trim();
+    final district = _districtController.text.trim();
+
+    if (cropName.isEmpty || quantityStr.isEmpty || priceStr.isEmpty || district.isEmpty) {
+      setState(() => _errorMsg = 'ফসলের নাম, পরিমাণ, দাম ও জেলা অবশ্যই দিতে হবে');
+      return;
+    }
+
+    final quantity = double.tryParse(quantityStr);
+    final price = double.tryParse(priceStr);
+
+    if (quantity == null || quantity <= 0) {
+      setState(() => _errorMsg = 'সঠিক পরিমাণ লিখুন');
+      return;
+    }
+    if (price == null || price <= 0) {
+      setState(() => _errorMsg = 'সঠিক দাম লিখুন');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMsg = null;
+    });
+
+    try {
+      List<String> photoUrls = [];
+
+      // Upload photo to Firebase Storage if selected
+      if (_selectedImage != null) {
+        try {
+          final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anon';
+          final ts = DateTime.now().millisecondsSinceEpoch;
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child('listings/$uid/$ts.jpg');
+          final bytes = await _selectedImage!.readAsBytes();
+          final uploadTask = await ref.putData(
+            bytes,
+            SettableMetadata(contentType: 'image/jpeg'),
+          );
+          final downloadUrl = await uploadTask.ref.getDownloadURL();
+          photoUrls.add(downloadUrl);
+        } catch (storageErr) {
+          if (kDebugMode) print('Firebase Storage upload failed: $storageErr');
+        }
+      }
+
+      final body = {
+        'crop_name': cropName,
+        'category': _categoryMap[_selectedCategory] ?? 'other',
+        'quantity': quantity,
+        'unit': _unitMap[_selectedUnit] ?? 'kg',
+        'price_per_unit': price,
+        'district': district,
+        if (_upazilaController.text.trim().isNotEmpty)
+          'upazila': _upazilaController.text.trim(),
+        if (_descController.text.trim().isNotEmpty)
+          'description': _descController.text.trim(),
+        'photo_urls': photoUrls,
+      };
+
+      await KrishiApiService.instance.createListing(body);
+
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('ফসলের নাম, পরিমাণ ও দাম অবশ্যই দিতে হবে'),
-          backgroundColor: Colors.red.shade700,
+          content: Text('$cropName এর পোস্ট সফলভাবে প্রকাশিত হয়েছে!'),
+          backgroundColor: primaryGreen,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
         ),
       );
-      return;
+
+      _cropNameController.clear();
+      _quantityController.clear();
+      _priceController.clear();
+      _districtController.clear();
+      _upazilaController.clear();
+      _descController.clear();
+      setState(() {
+        _selectedCategory = 'অন্যান্য';
+        _selectedImage = null;
+      });
+    } on DioException catch (dioErr) {
+      if (!mounted) return;
+      final status = dioErr.response?.statusCode;
+      final responseData = dioErr.response?.data;
+      final serverDetail = responseData is Map
+          ? (responseData['detail']?.toString())
+          : responseData?.toString();
+
+      String msg = 'পোস্ট প্রকাশ করতে সমস্যা হয়েছে (ত্রুটি $status)';
+      if (status == 401) {
+        msg = 'অথেনটিকেশন ব্যর্থ (401): ${serverDetail ?? "টোকেন নেই বা মেয়াদোত্তীর্ণ"}';
+      } else if (status == 403) {
+        msg = 'অনুমতি নেই (403): শুধুমাত্র কৃষক অ্যাকাউন্টে পোস্ট করা যাবে।';
+      } else if (status == 422) {
+        msg = 'তথ্য সঠিক নয় (422): ${serverDetail ?? "সব প্রয়োজনীয় ঘর পূরণ করুন"}';
+      } else if (status == 500) {
+        msg = 'সার্ভার ত্রুটি (500 Internal Server Error): ${serverDetail ?? "ব্যাকএন্ডে সমস্যা হয়েছে। Render Logs চেক করুন।"}';
+      } else if (serverDetail != null && serverDetail.isNotEmpty) {
+        msg = serverDetail;
+      }
+
+      setState(() {
+        _isSubmitting = false;
+        _errorMsg = msg;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMsg = 'সমস্যা: ${e.toString()}';
+      });
     }
-
-    setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${_cropNameController.text.trim()} এর পোস্ট সফলভাবে প্রকাশিত হয়েছে!'),
-        backgroundColor: primaryGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-      ),
-    );
-
-    _cropNameController.clear();
-    _quantityController.clear();
-    _priceController.clear();
-    _locationController.clear();
-    _descController.clear();
   }
 
   @override
@@ -83,7 +216,6 @@ class _PostCropScreenState extends State<PostCropScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 6.h),
-              // Header
               Text(
                 'ফসল বিক্রির পোস্ট',
                 style: TextStyle(
@@ -97,51 +229,109 @@ class _PostCropScreenState extends State<PostCropScreen> {
                 'আপনার ফসলের তথ্য দিন, ক্রেতারা যোগাযোগ করবেন',
                 style: TextStyle(fontSize: 13.sp, color: const Color(0xFF6B7280)),
               ),
-              SizedBox(height: 24.h),
 
-              // Image Upload Box
-              Container(
-                width: double.infinity,
-                height: 120.h,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: const Color(0xFFD1D5DB),
-                    style: BorderStyle.solid,
-                    width: 1.5,
+              if (_errorMsg != null) ...[
+                SizedBox(height: 12.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    _errorMsg!,
+                    style: TextStyle(fontSize: 13.sp, color: Colors.red.shade700),
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 44.w,
-                      height: 44.w,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF0FDF4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.add_photo_alternate_outlined,
-                          color: primaryGreen, size: 24.sp),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'ফসলের ছবি যোগ করুন (ঐচ্ছিক)',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              ],
+
+              SizedBox(height: 18.h),
+
+              // Image Upload Container
+              _buildLabel('ফসলের ছবি (ঐচ্ছিক)'),
+              SizedBox(height: 8.h),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: double.infinity,
+                  height: 130.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: const Color(0xFFD1D5DB), width: 1.5),
+                  ),
+                  child: _selectedImage != null
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(15.r),
+                              child: kIsWeb
+                                  ? Image.network(_selectedImage!.path, fit: BoxFit.cover)
+                                  : Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                            ),
+                            Positioned(
+                              top: 8.h,
+                              right: 8.w,
+                              child: GestureDetector(
+                                onTap: () => setState(() => _selectedImage = null),
+                                child: Container(
+                                  padding: EdgeInsets.all(6.w),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 44.w,
+                              height: 44.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF0FDF4),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.add_a_photo_outlined,
+                                  color: primaryGreen, size: 22.sp),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'ফসলের ছবি যোগ করুন (Firebase Storage)',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: const Color(0xFF6B7280),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
 
-              SizedBox(height: 20.h),
+              SizedBox(height: 18.h),
 
-              // Field 1: ফসলের নাম
-              _buildLabel('ফসলের নাম'),
+              // Category selector
+              _buildLabel('ফসলের ধরন'),
+              SizedBox(height: 8.h),
+              _buildDropdown(
+                value: _selectedCategory,
+                items: _categoryMap.keys.toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedCategory = val);
+                },
+              ),
+              SizedBox(height: 18.h),
+
+              // Crop name
+              _buildLabel('ফসলের নাম *'),
               SizedBox(height: 8.h),
               _buildInput(
                 controller: _cropNameController,
@@ -150,8 +340,8 @@ class _PostCropScreenState extends State<PostCropScreen> {
               ),
               SizedBox(height: 18.h),
 
-              // Field 2 & 3: পরিমাণ & একক
-              _buildLabel('পরিমাণ ও একক'),
+              // Quantity & Unit
+              _buildLabel('পরিমাণ ও একক *'),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -167,38 +357,20 @@ class _PostCropScreenState extends State<PostCropScreen> {
                   SizedBox(width: 12.w),
                   Expanded(
                     flex: 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedUnit,
-                          isExpanded: true,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          items: _units.map((unit) {
-                            return DropdownMenuItem(value: unit, child: Text(unit));
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedUnit = val);
-                          },
-                        ),
-                      ),
+                    child: _buildDropdown(
+                      value: _selectedUnit,
+                      items: _unitMap.keys.toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedUnit = val);
+                      },
                     ),
                   ),
                 ],
               ),
               SizedBox(height: 18.h),
 
-              // Field 4: প্রত্যাশিত দাম
-              _buildLabel('প্রত্যাশিত দাম (৳/একক)'),
+              // Price
+              _buildLabel('প্রত্যাশিত দাম (৳/একক) *'),
               SizedBox(height: 8.h),
               _buildInput(
                 controller: _priceController,
@@ -208,17 +380,27 @@ class _PostCropScreenState extends State<PostCropScreen> {
               ),
               SizedBox(height: 18.h),
 
-              // Field 5: লোকেশন
-              _buildLabel('আপনার লোকেশন'),
+              // District
+              _buildLabel('জেলা *'),
               SizedBox(height: 8.h),
               _buildInput(
-                controller: _locationController,
-                hint: 'উপজেলা, জেলা',
+                controller: _districtController,
+                hint: 'যেমন: রাজশাহী, বগুড়া',
+                icon: Icons.location_city_outlined,
+              ),
+              SizedBox(height: 18.h),
+
+              // Upazila
+              _buildLabel('উপজেলা (ঐচ্ছিক)'),
+              SizedBox(height: 8.h),
+              _buildInput(
+                controller: _upazilaController,
+                hint: 'যেমন: বাগমারা, শিবগঞ্জ',
                 icon: Icons.location_on_outlined,
               ),
               SizedBox(height: 18.h),
 
-              // Field 6: বিবরণ
+              // Description
               _buildLabel('বিস্তারিত (ঐচ্ছিক)'),
               SizedBox(height: 8.h),
               Container(
@@ -315,6 +497,36 @@ class _PostCropScreenState extends State<PostCropScreen> {
           prefixIcon: Icon(icon, color: const Color(0xFF6B7280), size: 20.sp),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 14.w),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: const Color(0xFF111827),
+            fontWeight: FontWeight.w600,
+          ),
+          items: items.map((item) {
+            return DropdownMenuItem(value: item, child: Text(item));
+          }).toList(),
+          onChanged: onChanged,
         ),
       ),
     );
