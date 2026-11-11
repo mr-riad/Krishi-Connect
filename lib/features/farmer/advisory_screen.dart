@@ -439,7 +439,7 @@ class _AdvisoryScreenState extends State<AdvisoryScreen>
                   ListView.separated(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
                     itemCount: _tips.length,
-                    separatorBuilder: (_, _) => SizedBox(height: 12.h),
+                    separatorBuilder: (context, index) => SizedBox(height: 12.h),
                     itemBuilder: (context, index) {
                       final tip = _tips[index];
                       return Container(

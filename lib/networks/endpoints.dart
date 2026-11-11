@@ -1,13 +1,11 @@
 // ignore_for_file: constant_identifier_names
-const String url = "https://dev.api.mickanic.ca/api";
+const String url = "https://krishi-connect-backend.onrender.com";
 
 final class NetworkConstants {
   NetworkConstants._();
   static const ACCEPT = "Accept";
-  static const APP_KEY = "App-Key";
   static const ACCEPT_LANGUAGE = "Accept-Language";
-  static const ACCEPT_LANGUAGE_VALUE = "pt";
-  static const APP_KEY_VALUE = String.fromEnvironment("APP_KEY_VALUE");
+  static const ACCEPT_LANGUAGE_VALUE = "bn";
   static const ACCEPT_TYPE = "application/json";
   static const AUTHORIZATION = "Authorization";
   static const CONTENT_TYPE = "content-Type";
@@ -15,27 +13,29 @@ final class NetworkConstants {
 
 final class Endpoints {
   Endpoints._();
-  //backend_url
-  static String signUp() => "/auth/register";
-  static String logIn() => "/auth/login";
-  static String otpVerify() => "/auth/verify-otp";
-  static String forgotPassword() => "/auth/forget-password";
-  static String forgotPasswordOtpVerify() => "/auth/verify-reset-otp";
-  static String resetPassword() => "/auth/reset-password";
-  static String resendOtp() => "/auth/resend-otp";
-  static String getAllJob() => "/jobs";
-  static String getJobDetails(String id) => "/jobs/$id";
-  static String getServices() => "/service-categories";
 
-  ///profile
-  static String profile() => "/user/profile";
+  // Base
+  static const String baseUrl = "https://krishi-connect-backend.onrender.com";
 
-  // static String getShopByCategories(String slug) =>
-  //     "/api/shop-categories/$slug/";
+  // Users
+  static String me() => "/users/me";
 
-  static String example() => "/api/";
+  // Listings (Farmer crops)
+  static String listings() => "/listings";
+  static String myListings() => "/listings/mine";
+  static String listingDetails(String id) => "/listings/$id";
+  static String listingPhotos(String id) => "/listings/$id/photos";
+  static String matchingRates(String id) => "/listings/$id/matching-rates";
 
-  static String products(int pageNum, int perPage) =>
-      "/products?page=$pageNum&per_page=$perPage";
-  static String productDetails(int id) => "/products/$id";
+  // Rates (Buyer rate board)
+  static String rates() => "/rates";
+  static String myRates() => "/rates/mine";
+  static String rateDetails(String id) => "/rates/$id";
+  static String matchingListings(String id) => "/rates/$id/matching-listings";
+
+  // Calls & Chat
+  static String triggerCall() => "/calls";
+  static String chats() => "/chats";
+  static String chatMessages(String cid) => "/chats/$cid/messages";
+  static String chatRead(String cid) => "/chats/$cid/read";
 }

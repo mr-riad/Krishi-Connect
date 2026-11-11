@@ -127,7 +127,7 @@ class _CropCalendarScreenState extends State<CropCalendarScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _seasons.length,
-                separatorBuilder: (_, _) => SizedBox(width: 10.w),
+                separatorBuilder: (context, index) => SizedBox(width: 10.w),
                 itemBuilder: (context, index) {
                   final isSelected = _selectedSeason == index;
                   return InkWell(
@@ -213,7 +213,7 @@ class _CropCalendarScreenState extends State<CropCalendarScreen> {
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: (_current['crops'] as List).length,
-                separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                separatorBuilder: (context, index) => SizedBox(height: 10.h),
                 itemBuilder: (context, index) {
                   final crop = (_current['crops'] as List)[index] as Map<String, dynamic>;
                   return Container(

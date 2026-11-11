@@ -1,7 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
 import '../../helpers/call_helper.dart';
+import '../../models/krishi_models.dart';
+import '../../services/api_service.dart';
+import '../shared/chat_screen.dart';
 
 class NearbyBuyersScreen extends StatefulWidget {
   const NearbyBuyersScreen({super.key});
@@ -14,64 +18,117 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
-  final List<Map<String, dynamic>> _entries = [
-    {
-      'name': 'রহিম ট্রেডার্স',
-      'type': 'ক্রেতা',
-      'distance': '২.৩',
-      'crop': 'ধান, গম',
-      'phone': '০১৭১১-১২৩৪৫৬',
-    },
-    {
-      'name': 'বাগমারা হাট',
-      'type': 'বাজার',
-      'distance': '৩.৮',
-      'crop': 'সব ধরনের ফসল',
-      'phone': '০১৭১৫-১১২২৩৩',
-    },
-    {
-      'name': 'আলম এন্টারপ্রাইজ',
-      'type': 'ক্রেতা',
-      'distance': '৫.১',
-      'crop': 'সবজি, ফল',
-      'phone': '০১৮২২-৯৮৭৬৫৪',
-    },
-    {
-      'name': 'তানোর কৃষি বাজার',
-      'type': 'বাজার',
-      'distance': '৬.৭',
-      'crop': 'সব ধরনের ফসল',
-      'phone': '০১৮১৬-২২৩৩৪৪',
-    },
-    {
-      'name': 'করিম ফ্রেশ',
-      'type': 'ক্রেতা',
-      'distance': '৮.২',
-      'crop': 'আলু, পেঁয়াজ',
-      'phone': '০১৯৩৩-৫৫৪৪৩৩',
-    },
-  ];
+  final TextEditingController _districtCtrl = TextEditingController();
+  final TextEditingController _upazilaCtrl = TextEditingController();
 
-  void _call(Map<String, dynamic> entry) {
-    final phone = entry['phone'] as String? ?? '';
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${entry['name']}-এর যোগাযোগ নম্বর পাওয়া যায়নি'),
-          backgroundColor: Colors.grey.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
+  bool _isLoading = false;
+  String? _errorMsg;
+  List<BuyerRate> _buyerRates = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNearbyBuyers();
+  }
+
+  @override
+  void dispose() {
+    _districtCtrl.dispose();
+    _upazilaCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchNearbyBuyers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final res = await KrishiApiService.instance.getRates(
+        district: _districtCtrl.text.trim().isEmpty ? null : _districtCtrl.text.trim(),
+        upazila: _upazilaCtrl.text.trim().isEmpty ? null : _upazilaCtrl.text.trim(),
+        sort: 'newest',
+        limit: 50,
+      );
+      if (!mounted) return;
+      final items = (res['items'] as List<dynamic>?) ?? [];
+      setState(() {
+        _buyerRates = items.map((e) => BuyerRate.fromJson(e as Map<String, dynamic>)).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMsg = 'কাছের ক্রেতা লোড করতে সমস্যা হয়েছে';
+      });
+    }
+  }
+
+  Future<void> _callBuyer(BuyerRate rate) async {
+    if (rate.buyerPhone != null && rate.buyerPhone!.isNotEmpty) {
+      showDirectCallBottomSheet(
+        context: context,
+        phone: rate.buyerPhone!,
+        name: rate.buyerName ?? rate.cropName,
+        roleOrType: 'ক্রেতা',
+        subtitle: '${rate.cropName} (৳${rate.ratePerUnit.toStringAsFixed(0)}/${rate.unitLabel})',
+        location: rate.locationLabel,
       );
       return;
     }
-    showDirectCallBottomSheet(
-      context: context,
-      name: entry['name'] as String,
-      phone: phone,
-      roleOrType: entry['type'] as String?,
-      subtitle: '${entry['crop']}',
-      location: '${entry['distance']} কিমি দূরত্ব',
-    );
+    try {
+      final callData = await KrishiApiService.instance
+          .triggerCall(targetUid: rate.buyerId, rateId: rate.id);
+      final phone = callData['phone'] as String?;
+      if (phone != null && mounted) {
+        showDirectCallBottomSheet(
+          context: context,
+          phone: phone,
+          name: callData['target_name'] as String? ?? rate.buyerName ?? rate.cropName,
+          roleOrType: 'ক্রেতা',
+          subtitle: '${rate.cropName} (৳${rate.ratePerUnit.toStringAsFixed(0)}/${rate.unitLabel})',
+          location: rate.locationLabel,
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ক্রেতার নম্বর পাওয়া যায়নি'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _chatBuyer(BuyerRate rate) async {
+    try {
+      final conv = await KrishiApiService.instance.startConversation(
+        participantId: rate.buyerId,
+      );
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            conversationId: conv['id'] as String,
+            peerName: rate.buyerName ?? 'ক্রেতা',
+            peerPhone: rate.buyerPhone,
+            listingTitle: '${rate.cropName} (দর: ৳${rate.ratePerUnit.toStringAsFixed(0)}/${rate.unitLabel})',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('চ্যাট শুরু করতে সমস্যা হয়েছে'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
   }
 
   @override
@@ -82,32 +139,9 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Badge
+            // Top Bar
             Padding(
-              padding: EdgeInsets.only(right: 16.w, top: 12.h),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    'F-05 · কৃষক',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
-                      color: primaryGreen,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               child: Row(
                 children: [
                   GestureDetector(
@@ -124,178 +158,257 @@ class _NearbyBuyersScreenState extends State<NearbyBuyersScreen> {
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  Text(
-                    'কাছের ক্রেতা ও বাজার',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF111827),
+                  Expanded(
+                    child: Text(
+                      'কাছের ক্রেতা ও বাজার',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _fetchNearbyBuyers,
+                    icon: Icon(Icons.refresh_rounded, color: primaryGreen, size: 22.sp),
+                  ),
+                ],
+              ),
+            ),
+
+            // District & Upazila filter
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 42.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: TextField(
+                        controller: _districtCtrl,
+                        style: TextStyle(fontSize: 13.sp),
+                        onSubmitted: (_) => _fetchNearbyBuyers(),
+                        decoration: InputDecoration(
+                          hintText: 'জেলা লিখুন...',
+                          hintStyle: TextStyle(fontSize: 12.sp, color: const Color(0xFF9CA3AF)),
+                          prefixIcon: Icon(Icons.location_city, size: 16.sp, color: const Color(0xFF6B7280)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      height: 42.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: TextField(
+                        controller: _upazilaCtrl,
+                        style: TextStyle(fontSize: 13.sp),
+                        onSubmitted: (_) => _fetchNearbyBuyers(),
+                        decoration: InputDecoration(
+                          hintText: 'উপজেলা...',
+                          hintStyle: TextStyle(fontSize: 12.sp, color: const Color(0xFF9CA3AF)),
+                          prefixIcon: Icon(Icons.pin_drop_outlined, size: 16.sp, color: const Color(0xFF6B7280)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  GestureDetector(
+                    onTap: _fetchNearbyBuyers,
+                    child: Container(
+                      width: 42.h,
+                      height: 42.h,
+                      decoration: BoxDecoration(
+                        color: primaryGreen,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(Icons.search, color: Colors.white, size: 20.sp),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Filter chips (জেলা / উপজেলা)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: ['জেলা', 'উপজেলা'].map((label) {
-                  return Container(
-                    margin: EdgeInsets.only(right: 10.w),
-                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
             SizedBox(height: 12.h),
 
-            // Map placeholder
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Container(
-                width: double.infinity,
-                height: 150.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFBBF7D0)),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.map_outlined, size: 40.sp, color: primaryGreen.withValues(alpha: 0.5)),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'ম্যাপ',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: primaryGreen.withValues(alpha: 0.7),
+            // Results List
+            if (_isLoading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (_errorMsg != null)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline, size: 40.sp, color: Colors.red.shade400),
+                      SizedBox(height: 10.h),
+                      Text(_errorMsg!, style: TextStyle(fontSize: 13.sp, color: Colors.red.shade600)),
+                      SizedBox(height: 12.h),
+                      ElevatedButton(
+                        onPressed: _fetchNearbyBuyers,
+                        style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+                        child: const Text('পুনরায় চেষ্টা করুন', style: TextStyle(color: Colors.white)),
                       ),
-                    ),
-                    Text(
-                      'GPS সক্রিয় করুন',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 14.h),
-
-            // Buyers & Markets list
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: _entries.length,
-                separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                itemBuilder: (context, index) {
-                  final entry = _entries[index];
-                  final isBuyer = entry['type'] == 'ক্রেতা';
-                  return Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.025),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        // Icon
-                        Container(
-                          width: 46.w,
-                          height: 46.w,
-                          decoration: BoxDecoration(
-                            color: isBuyer ? const Color(0xFFF0FDF4) : const Color(0xFFFEF3C7),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isBuyer ? Icons.person_rounded : Icons.storefront_rounded,
-                            color: isBuyer ? primaryGreen : const Color(0xFFD97706),
-                            size: 22.sp,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        // Details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry['name'],
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF111827),
-                                ),
-                              ),
-                              SizedBox(height: 3.h),
-                              Text(
-                                '${entry['distance']} কিমি · ${entry['crop']}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF6B7280),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Call Button
-                        GestureDetector(
-                          onTap: () => _call(entry),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                            decoration: BoxDecoration(
-                              color: primaryGreen,
-                              borderRadius: BorderRadius.circular(10.r),
+              )
+            else if (_buyerRates.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'কোনো ক্রেতা পাওয়া যায়নি',
+                    style: TextStyle(fontSize: 14.sp, color: const Color(0xFF6B7280)),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _fetchNearbyBuyers,
+                  color: primaryGreen,
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: _buyerRates.length,
+                    itemBuilder: (ctx, i) {
+                      final rate = _buyerRates[i];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.all(14.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Icon(Icons.phone_in_talk_rounded, size: 14.sp, color: Colors.white),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  'সরাসরি কল',
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                Container(
+                                  width: 42.w,
+                                  height: 42.w,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFDCFCE7),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.storefront_outlined,
+                                      color: primaryGreen, size: 22.sp),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        rate.buyerName ?? 'ক্রেতা',
+                                        style: TextStyle(
+                                          fontSize: 15.sp,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF111827),
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        '${rate.cropName} • ৳${rate.ratePerUnit.toStringAsFixed(0)}/${rate.unitLabel}',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryGreen,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            SizedBox(height: 8.h),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_outlined, size: 14.sp, color: const Color(0xFF6B7280)),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  rate.locationLabel,
+                                  style: TextStyle(fontSize: 12.sp, color: const Color(0xFF4B5563)),
+                                ),
+                                if (rate.demandQuantity != null) ...[
+                                  SizedBox(width: 14.w),
+                                  Icon(Icons.inventory_2_outlined, size: 14.sp, color: const Color(0xFF6B7280)),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    '${rate.demandQuantity!.toStringAsFixed(0)} ${rate.unitLabel}',
+                                    style: TextStyle(fontSize: 12.sp, color: const Color(0xFF4B5563)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: SizedBox(
+                                    height: 36.h,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _callBuyer(rate),
+                                      icon: Icon(Icons.call_outlined, size: 15.sp),
+                                      label: Text('সরাসরি কল',
+                                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryGreen,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  flex: 2,
+                                  child: SizedBox(
+                                    height: 36.h,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _chatBuyer(rate),
+                                      icon: Icon(Icons.chat_outlined, size: 15.sp),
+                                      label: Text('চ্যাট',
+                                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700)),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: primaryGreen,
+                                        side: const BorderSide(color: primaryGreen),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

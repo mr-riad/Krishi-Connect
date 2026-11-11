@@ -152,7 +152,7 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _tabs.length,
-                separatorBuilder: (_, _) => SizedBox(width: 10.w),
+                separatorBuilder: (context, index) => SizedBox(width: 10.w),
                 itemBuilder: (context, index) {
                   final isSelected = _selectedTab == index;
                   return InkWell(
@@ -235,7 +235,7 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _filtered.length,
-                separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                separatorBuilder: (context, index) => SizedBox(height: 10.h),
                 itemBuilder: (context, index) {
                   final post = _filtered[index];
                   return Container(

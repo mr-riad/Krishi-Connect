@@ -1,9 +1,15 @@
+﻿// ignore_for_file: use_build_context_synchronously
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:krishi_connect/constants/app_constants.dart';
 import 'package:krishi_connect/helpers/all_routes.dart';
+import 'package:krishi_connect/helpers/di.dart';
 import 'package:krishi_connect/helpers/navigation_service.dart';
 
 import '../../gen/colors.gen.dart';
+import '../shared/token_screen.dart';
 
 class BuyerProfileScreen extends StatelessWidget {
   const BuyerProfileScreen({super.key});
@@ -154,6 +160,14 @@ class BuyerProfileScreen extends StatelessWidget {
                     SizedBox(height: 12.h),
 
                     _buildMenuCard([
+                      _buildMenuItem(
+                        Icons.vpn_key_outlined,
+                        'অথোরাইজ টোকেন দেখুন ও কপি করুন',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TokenScreen()),
+                        ),
+                      ),
                       _buildMenuItem(
                         Icons.edit_outlined,
                         'প্রোফাইল সম্পাদনা',
