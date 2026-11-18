@@ -167,25 +167,25 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Top Bar Badge
-              Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    "ক্রেতা · দর পোস্ট",
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0284C7),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 8.h),
+              // Align(
+              //   alignment: Alignment.topRight,
+              //   child: Container(
+              //     padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              //     decoration: BoxDecoration(
+              //       color: const Color(0xFFE0F2FE),
+              //       borderRadius: BorderRadius.circular(8.r),
+              //     ),
+              //     child: Text(
+              //       "ক্রেতা · দর পোস্ট",
+              //       style: TextStyle(
+              //         fontSize: 12.sp,
+              //         fontWeight: FontWeight.w700,
+              //         color: const Color(0xFF0284C7),
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              // SizedBox(height: 8.h),
 
               // Back button + Title
               Row(
