@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../gen/colors.gen.dart';
+import '../../services/api_service.dart';
+import 'intercropping_screen.dart';
 
 class CropCalendarScreen extends StatefulWidget {
   const CropCalendarScreen({super.key});
@@ -13,225 +16,319 @@ class _CropCalendarScreenState extends State<CropCalendarScreen> {
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
+  final _api = KrishiApiService.instance;
+
+  bool _isLoading = true;
+  String? _error;
+
+  // Full calendar data from backend
+  String _currentMonthBn = '';
+  Map<String, dynamic>? _currentSeasonData;
+  List<Map<String, dynamic>> _seasons = [];
+
   int _selectedSeason = 0;
-  final List<String> _seasons = ['রবি', 'খরিফ-১', 'খরিফ-২'];
 
-  final List<Map<String, dynamic>> _seasonData = [
-    {
-      'season': 'রবি',
-      'months': 'নভেম্বর – মার্চ',
-      'current': 'ডিসেম্বর',
-      'tip': 'এখন চাষের উপযুক্ত',
-      'crops': [
-        {'name': 'গম', 'sow': 'নভেম্বর–ডিসেম্বর', 'harvest': 'মার্চ–এপ্রিল', 'icon': '🌾'},
-        {'name': 'সরিষা', 'sow': 'অক্টোবর–নভেম্বর', 'harvest': 'ফেব্রুয়ারি–মার্চ', 'icon': '🌻'},
-        {'name': 'আলু', 'sow': 'অক্টোবর–নভেম্বর', 'harvest': 'জানুয়ারি–ফেব্রুয়ারি', 'icon': '🥔'},
-        {'name': 'মসুর', 'sow': 'অক্টোবর–নভেম্বর', 'harvest': 'মার্চ–এপ্রিল', 'icon': '🫘'},
-        {'name': 'পেঁয়াজ', 'sow': 'নভেম্বর–ডিসেম্বর', 'harvest': 'মার্চ–এপ্রিল', 'icon': '🧅'},
-      ],
-    },
-    {
-      'season': 'খরিফ-১',
-      'months': 'মার্চ – জুন',
-      'current': 'এপ্রিল',
-      'tip': 'এখন বপন সময়',
-      'crops': [
-        {'name': 'আউশ ধান', 'sow': 'মার্চ–এপ্রিল', 'harvest': 'জুলাই–আগস্ট', 'icon': '🌾'},
-        {'name': 'মুগ', 'sow': 'ফেব্রুয়ারি–মার্চ', 'harvest': 'মে–জুন', 'icon': '🫘'},
-        {'name': 'তিল', 'sow': 'মার্চ–এপ্রিল', 'harvest': 'জুন–জুলাই', 'icon': '🌿'},
-        {'name': 'গ্রীষ্মকালীন সবজি', 'sow': 'ফেব্রুয়ারি–মার্চ', 'harvest': 'মে–জুলাই', 'icon': '🥦'},
-      ],
-    },
-    {
-      'season': 'খরিফ-২',
-      'months': 'জুন – নভেম্বর',
-      'current': 'আগস্ট',
-      'tip': 'আমন মৌসুম চলছে',
-      'crops': [
-        {'name': 'আমন ধান', 'sow': 'জুন–আগস্ট', 'harvest': 'নভেম্বর–ডিসেম্বর', 'icon': '🌾'},
-        {'name': 'আখ', 'sow': 'জানুয়ারি–মার্চ', 'harvest': 'নভেম্বর–মার্চ', 'icon': '🎋'},
-        {'name': 'শীতকালীন সবজি বপন', 'sow': 'আগস্ট–সেপ্টেম্বর', 'harvest': 'নভেম্বর–জানুয়ারি', 'icon': '🥬'},
-        {'name': 'পাট', 'sow': 'মার্চ–মে', 'harvest': 'জুলাই–আগস্ট', 'icon': '🪢'},
-      ],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchCalendar();
+  }
 
-  Map<String, dynamic> get _current => _seasonData[_selectedSeason];
+  Future<void> _fetchCalendar() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final data = await _api.getFullCalendar();
+
+      _currentMonthBn = data['current_month_bn'] ?? '';
+      _currentSeasonData = data['current_season'];
+
+      final seasonsList = data['seasons'] as List<dynamic>? ?? [];
+      _seasons = seasonsList.map((s) => s as Map<String, dynamic>).toList();
+
+      // Auto-select the current season tab
+      if (_currentSeasonData != null) {
+        final currentSeasonId = _currentSeasonData!['id'];
+        for (int i = 0; i < _seasons.length; i++) {
+          final seasonInfo = _seasons[i]['season'] as Map<String, dynamic>?;
+          if (seasonInfo != null && seasonInfo['id'] == currentSeasonId) {
+            _selectedSeason = i;
+            break;
+          }
+        }
+      }
+
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = 'ডাটা লোড করতে সমস্যা হচ্ছে। আবার চেষ্টা করুন।';
+      });
+      debugPrint('[CropCalendar] Error: $e');
+    }
+  }
+
+  Map<String, dynamic> get _currentSeasonCalendar =>
+      _seasons.isNotEmpty ? _seasons[_selectedSeason] : {};
+
+  Map<String, dynamic> get _seasonMeta =>
+      _currentSeasonCalendar['season'] as Map<String, dynamic>? ?? {};
+
+  List<Map<String, dynamic>> get _crops {
+    final cropsList = _currentSeasonCalendar['crops'] as List<dynamic>? ?? [];
+    return cropsList.map((c) => c as Map<String, dynamic>).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+            ? _buildError()
+            : _buildContent(),
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Badge
-            Padding(
-              padding: EdgeInsets.only(right: 16.w, top: 12.h),
-              child: Align(
-                alignment: Alignment.topRight,
+            Icon(Icons.cloud_off_rounded, size: 56.sp, color: Colors.grey),
+            SizedBox(height: 16.h),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, color: const Color(0xFF6B7280)),
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton.icon(
+              onPressed: _fetchCalendar,
+              icon: const Icon(Icons.refresh),
+              label: const Text('আবার চেষ্টা করুন'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Badge
+        Padding(
+          padding: EdgeInsets.only(right: 16.w, top: 12.h),
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                'F-08 · কৃষক',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w700,
+                  color: primaryGreen,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Header
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.maybePop(context),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  width: 40.w,
+                  height: 40.w,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(8.r),
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'মৌসুমি ফসল ক্যালেন্ডার',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Season Tabs
+        SizedBox(
+          height: 40.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            itemCount: _seasons.length,
+            separatorBuilder: (context, index) => SizedBox(width: 10.w),
+            itemBuilder: (context, index) {
+              final seasonInfo =
+                  _seasons[index]['season'] as Map<String, dynamic>? ?? {};
+              final isSelected = _selectedSeason == index;
+              return InkWell(
+                onTap: () => setState(() => _selectedSeason = index),
+                borderRadius: BorderRadius.circular(20.r),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? primaryGreen : Colors.white,
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(
+                      color: isSelected
+                          ? primaryGreen
+                          : const Color(0xFFE5E7EB),
+                    ),
                   ),
                   child: Text(
-                    'F-08 · কৃষক',
+                    seasonInfo['name_bn'] ?? '',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
-                      color: primaryGreen,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF374151),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
+          ),
+        ),
+        SizedBox(height: 14.h),
 
-            // Header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.maybePop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Text(
-                    'মৌসুমি ফসল ক্যালেন্ডার',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF111827),
-                    ),
-                  ),
-                ],
-              ),
+        // Season Info Card
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: primaryGreen.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: primaryGreen.withValues(alpha: 0.2)),
             ),
-
-            // Season Tabs
-            SizedBox(
-              height: 40.h,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: _seasons.length,
-                separatorBuilder: (context, index) => SizedBox(width: 10.w),
-                itemBuilder: (context, index) {
-                  final isSelected = _selectedSeason == index;
-                  return InkWell(
-                    onTap: () => setState(() => _selectedSeason = index),
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: isSelected ? primaryGreen : Colors.white,
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          color: isSelected ? primaryGreen : const Color(0xFFE5E7EB),
-                        ),
-                      ),
-                      child: Text(
-                        _seasons[index],
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : const Color(0xFF374151),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 14.h),
-
-            // Season Info Card
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: primaryGreen.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: primaryGreen.withValues(alpha: 0.2)),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  color: primaryGreen,
+                  size: 18.sp,
                 ),
-                child: Row(
+                SizedBox(width: 10.w),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.calendar_today_rounded, color: primaryGreen, size: 18.sp),
-                    SizedBox(width: 10.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _current['tip'],
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: const Color(0xFF6B7280),
-                          ),
-                        ),
-                        Text(
-                          _current['current'],
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w800,
-                            color: primaryGreen,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
                     Text(
-                      _current['months'],
+                      _currentSeasonCalendar['tip_bn'] ?? '',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 13.sp,
                         color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      _currentMonthBn,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w800,
+                        color: primaryGreen,
                       ),
                     ),
                   ],
                 ),
-              ),
+                const Spacer(),
+                Text(
+                  _seasonMeta['months_bn'] ?? '',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFF6B7280),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 14.h),
+          ),
+        ),
+        SizedBox(height: 14.h),
 
-            // Crops list
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: (_current['crops'] as List).length,
-                separatorBuilder: (context, index) => SizedBox(height: 10.h),
-                itemBuilder: (context, index) {
-                  final crop = (_current['crops'] as List)[index] as Map<String, dynamic>;
-                  return Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(crop['icon'], style: TextStyle(fontSize: 28.sp)),
-                        SizedBox(width: 14.w),
-                        Column(
+        // Crops list
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            itemCount: _crops.length,
+            separatorBuilder: (context, index) => SizedBox(height: 10.h),
+            itemBuilder: (context, index) {
+              final crop = _crops[index];
+              final companions =
+                  (crop['companions'] as List<dynamic>?)?.cast<String>() ?? [];
+              return GestureDetector(
+                onTap: companions.isNotEmpty
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => IntercroppingScreen(
+                              cropId: crop['id'] ?? '',
+                              cropNameBn: crop['name_bn'] ?? '',
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
+                child: Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        crop['icon'] ?? '🌱',
+                        style: TextStyle(fontSize: 28.sp),
+                      ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              crop['name'],
+                              crop['name_bn'] ?? '',
                               style: TextStyle(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w800,
@@ -240,30 +337,63 @@ class _CropCalendarScreenState extends State<CropCalendarScreen> {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              'বপন: ${crop['sow']}',
+                              'বপন: ${crop['sow_bn'] ?? ''}',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: const Color(0xFF6B7280),
                               ),
                             ),
                             Text(
-                              'কাটা: ${crop['harvest']}',
+                              'কাটা: ${crop['harvest_bn'] ?? ''}',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: const Color(0xFF6B7280),
                               ),
                             ),
+                            if (crop['companion_note_bn'] != null &&
+                                (crop['companion_note_bn'] as String)
+                                    .isNotEmpty) ...[
+                              SizedBox(height: 4.h),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.eco_outlined,
+                                    size: 12.sp,
+                                    color: primaryGreen,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Expanded(
+                                    child: Text(
+                                      crop['companion_note_bn'],
+                                      style: TextStyle(
+                                        fontSize: 11.sp,
+                                        color: primaryGreen,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+                      ),
+                      if (companions.isNotEmpty)
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: const Color(0xFF9CA3AF),
+                          size: 22.sp,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 }
