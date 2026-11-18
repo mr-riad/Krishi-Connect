@@ -4,6 +4,7 @@ import '../../gen/colors.gen.dart';
 import 'farm_equipment_screen.dart';
 import 'farmer_community_screen.dart';
 import 'crop_calendar_screen.dart';
+import 'intercropping_screen.dart';
 import 'nearby_buyers_screen.dart';
 import 'agri_news_screen.dart';
 
@@ -32,7 +33,7 @@ class FarmerScreen extends StatelessWidget {
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyBuyersScreen())),
       },
       {'title': 'রোগ নির্ণয়', 'icon': Icons.search_rounded, 'onTap': onGoToAdvisory},
-      {'title': 'সাথী ফসল', 'icon': Icons.eco_outlined, 'onTap': onGoToAdvisory},
+      {'title': 'সাথী ফসল', 'icon': Icons.eco_outlined, 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercroppingScreen()))},
       {
         'title': 'ফসল ক্যালেন্ডার',
         'icon': Icons.calendar_month_outlined,

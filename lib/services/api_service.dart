@@ -2,10 +2,9 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+
 import '../constants/app_constants.dart';
-import '../helpers/all_routes.dart';
 import '../helpers/di.dart';
-import '../helpers/navigation_service.dart';
 
 /// Base URL for Krishi Connect backend
 const String kBaseUrl = 'https://krishi-connect-backend.onrender.com';
@@ -115,21 +114,6 @@ class KrishiApiService {
 
   // ─── Session ──────────────────────────────────────────────────────────────
 
-  /// Called when a 401 cannot be recovered (token refresh also failed).
-  /// Clears local session and sends the user back to the login screen.
-  void _handleSessionExpired() {
-    if (kDebugMode) print('[KrishiApi] Session expired — redirecting to login');
-    // Sign out from Firebase
-    FirebaseAuth.instance.signOut().catchError((_) {});
-    // Clear local storage
-    appData.remove(kKeyAccessToken);
-    appData.remove(kKeyIsLoggedIn);
-    appData.remove(selectedRole);
-    appData.remove(kPhone);
-    // Navigate to login (remove all previous routes)
-    NavigationService.navigateToUntilReplacement(Routes.loginScreen);
-  }
-
   // ─── Users ────────────────────────────────────────────────────────────────
 
   /// GET /users/me
@@ -202,7 +186,9 @@ class KrishiApiService {
 
   /// PATCH /listings/{id}
   Future<Map<String, dynamic>> updateListing(
-      String id, Map<String, dynamic> body) async {
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final res = await _dio.patch('/listings/$id', data: body);
     return res.data as Map<String, dynamic>;
   }
@@ -213,10 +199,14 @@ class KrishiApiService {
   }
 
   /// GET /listings/{id}/matching-rates – farmer: which buyers match
-  Future<List<dynamic>> getMatchingRates(String listingId,
-      {double radiusKm = 50}) async {
-    final res = await _dio.get('/listings/$listingId/matching-rates',
-        queryParameters: {'radius_km': radiusKm});
+  Future<List<dynamic>> getMatchingRates(
+    String listingId, {
+    double radiusKm = 50,
+  }) async {
+    final res = await _dio.get(
+      '/listings/$listingId/matching-rates',
+      queryParameters: {'radius_km': radiusKm},
+    );
     return res.data as List<dynamic>;
   }
 
@@ -270,7 +260,9 @@ class KrishiApiService {
 
   /// PATCH /rates/{id}
   Future<Map<String, dynamic>> updateRate(
-      String id, Map<String, dynamic> body) async {
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final res = await _dio.patch('/rates/$id', data: body);
     return res.data as Map<String, dynamic>;
   }
@@ -281,10 +273,14 @@ class KrishiApiService {
   }
 
   /// GET /rates/{id}/matching-listings – buyer: which farmers match
-  Future<List<dynamic>> getMatchingListings(String rateId,
-      {double radiusKm = 50}) async {
-    final res = await _dio.get('/rates/$rateId/matching-listings',
-        queryParameters: {'radius_km': radiusKm});
+  Future<List<dynamic>> getMatchingListings(
+    String rateId, {
+    double radiusKm = 50,
+  }) async {
+    final res = await _dio.get(
+      '/rates/$rateId/matching-listings',
+      queryParameters: {'radius_km': radiusKm},
+    );
     return res.data as List<dynamic>;
   }
 
@@ -295,9 +291,7 @@ class KrishiApiService {
     required String participantId,
     String? listingId,
   }) async {
-    final body = <String, dynamic>{
-      'participant_id': participantId,
-    };
+    final body = <String, dynamic>{'participant_id': participantId};
     if (listingId != null) body['listing_id'] = listingId;
     final res = await _dio.post('/chats', data: body);
     return res.data as Map<String, dynamic>;
@@ -311,7 +305,10 @@ class KrishiApiService {
 
   /// GET /chats/{cid}/messages – Load message history
   Future<List<dynamic>> getMessages(String cid, {int limit = 50}) async {
-    final res = await _dio.get('/chats/$cid/messages', queryParameters: {'limit': limit});
+    final res = await _dio.get(
+      '/chats/$cid/messages',
+      queryParameters: {'limit': limit},
+    );
     return res.data as List<dynamic>;
   }
 
@@ -333,13 +330,56 @@ class KrishiApiService {
     String listingId,
     List<MultipartFile> files,
   ) async {
-    final formData = FormData.fromMap({
-      'files': files,
-    });
-    final res = await _dio.post(
-      '/listings/$listingId/photos',
-      data: formData,
-    );
+    final formData = FormData.fromMap({'files': files});
+    final res = await _dio.post('/listings/$listingId/photos', data: formData);
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Crop Calendar & Intercropping ─────────────────────────────────────────
+
+  /// GET /calendar — full 3-season calendar
+  Future<Map<String, dynamic>> getFullCalendar() async {
+    final res = await _dio.get('/calendar');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /calendar/season/{season_id} — single season's crops
+  Future<Map<String, dynamic>> getSeasonCalendar(String seasonId) async {
+    final res = await _dio.get('/calendar/season/$seasonId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /calendar/month/{month} — crops sowable in a given month (1-12)
+  Future<Map<String, dynamic>> getMonthCalendar(int month) async {
+    final res = await _dio.get('/calendar/month/$month');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /intercrop — all intercrop combo guides (optionally filter by season)
+  Future<Map<String, dynamic>> getIntercropGuide({String? seasonId}) async {
+    final params = <String, dynamic>{};
+    if (seasonId != null && seasonId.isNotEmpty) {
+      params['season_id'] = seasonId;
+    }
+    final res = await _dio.get('/intercrop', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /intercrop/season/{season_id}
+  Future<Map<String, dynamic>> getIntercropBySeason(String seasonId) async {
+    final res = await _dio.get('/intercrop/season/$seasonId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /intercrop/crop/{crop_id}
+  Future<Map<String, dynamic>> getIntercropByCrop(String cropId) async {
+    final res = await _dio.get('/intercrop/crop/$cropId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /intercrop/companions/{crop_id} — direct companion list for a crop
+  Future<Map<String, dynamic>> getCompanions(String cropId) async {
+    final res = await _dio.get('/intercrop/companions/$cropId');
     return res.data as Map<String, dynamic>;
   }
 
@@ -351,13 +391,10 @@ class KrishiApiService {
     String? listingId,
     String? rateId,
   }) async {
-    final body = <String, dynamic>{
-      'target_uid': targetUid,
-    };
+    final body = <String, dynamic>{'target_uid': targetUid};
     if (listingId != null) body['listing_id'] = listingId;
     if (rateId != null) body['rate_id'] = rateId;
     final res = await _dio.post('/calls', data: body);
     return res.data as Map<String, dynamic>;
   }
 }
-

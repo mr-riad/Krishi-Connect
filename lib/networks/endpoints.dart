@@ -38,4 +38,13 @@ final class Endpoints {
   static String chats() => "/chats";
   static String chatMessages(String cid) => "/chats/$cid/messages";
   static String chatRead(String cid) => "/chats/$cid/read";
+
+  // Crop Calendar & Intercropping
+  static String fullCalendar() => "/calendar";
+  static String seasonCalendar(String seasonId) => "/calendar/season/$seasonId";
+  static String monthCalendar(int month) => "/calendar/month/$month";
+  static String intercropGuide() => "/intercrop";
+  static String intercropBySeason(String seasonId) => "/intercrop/season/$seasonId";
+  static String intercropByCrop(String cropId) => "/intercrop/crop/$cropId";
+  static String intercropCompanions(String cropId) => "/intercrop/companions/$cropId";
 }
