@@ -47,4 +47,18 @@ final class Endpoints {
   static String intercropBySeason(String seasonId) => "/intercrop/season/$seasonId";
   static String intercropByCrop(String cropId) => "/intercrop/crop/$cropId";
   static String intercropCompanions(String cropId) => "/intercrop/companions/$cropId";
+
+  // Disease Diagnosis & Agricultural Tips
+  static String diseases() => "/diseases";
+  static String diseaseDetails(String id) => "/diseases/$id";
+  static String diseaseCrops() => "/diseases/crops";
+  static String diagnoseDisease() => "/diseases/diagnose";
+
+  static String tips() => "/tips";
+  static String tipDetails(String id) => "/tips/$id";
+
+  static String diseaseReports() => "/disease-reports";
+  static String diseaseReportDetails(String id) => "/disease-reports/$id";
+  static String diseaseReportPhotos(String id) => "/disease-reports/$id/photos";
+  static String diseaseReportStats() => "/disease-reports/stats/summary";
 }
