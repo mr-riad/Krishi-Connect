@@ -56,9 +56,12 @@ class KrishiApiService {
                 token = saved;
               }
             }
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
+            // Fallback guest token so authenticated endpoints (diseases, tips, diagnose) work even before phone login
+            if (token == null || token.isEmpty) {
+              final uid = appData.read(kKeyUserID)?.toString() ?? 'guest_farmer';
+              token = 'farmer_token_$uid';
             }
+            options.headers['Authorization'] = 'Bearer $token';
             if (kDebugMode) {
               print(
                 '[KrishiApi] ${options.method} ${options.baseUrl}${options.path}'
@@ -380,6 +383,153 @@ class KrishiApiService {
   /// GET /intercrop/companions/{crop_id} — direct companion list for a crop
   Future<Map<String, dynamic>> getCompanions(String cropId) async {
     final res = await _dio.get('/intercrop/companions/$cropId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Disease Database & Diagnosis ──────────────────────────────────────────
+
+  /// GET /diseases/crops — list unique supported crop keys
+  Future<List<String>> getDiseaseCrops() async {
+    final res = await _dio.get('/diseases/crops');
+    return (res.data as List<dynamic>).map((e) => e.toString()).toList();
+  }
+
+  /// GET /diseases — browse disease database with optional filters
+  Future<Map<String, dynamic>> getDiseases({
+    String? crop,
+    String? category,
+    String? severity,
+    String? season,
+    String? q,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+    };
+    if (crop != null && crop.isNotEmpty) params['crop'] = crop;
+    if (category != null && category.isNotEmpty) params['category'] = category;
+    if (severity != null && severity.isNotEmpty) params['severity'] = severity;
+    if (season != null && season.isNotEmpty) params['season'] = season;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+
+    final res = await _dio.get('/diseases', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /diseases/{disease_id} — get disease detail
+  Future<Map<String, dynamic>> getDiseaseDetail(String diseaseId) async {
+    final res = await _dio.get('/diseases/$diseaseId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /diseases/diagnose — keyword/symptom-based diagnosis engine
+  Future<Map<String, dynamic>> diagnoseDisease({
+    required String crop,
+    required String symptoms,
+    String? affectedPart,
+    String? season,
+    String? district,
+  }) async {
+    final body = <String, dynamic>{
+      'crop': crop,
+      'symptoms': symptoms,
+    };
+    if (affectedPart != null && affectedPart.isNotEmpty) {
+      body['affected_part'] = affectedPart;
+    }
+    if (season != null && season.isNotEmpty) {
+      body['season'] = season;
+    }
+    if (district != null && district.isNotEmpty) {
+      body['district'] = district;
+    }
+
+    final res = await _dio.post('/diseases/diagnose', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Farming Management Tips ───────────────────────────────────────────────
+
+  /// GET /tips — browse agricultural best practices and farming tips
+  Future<Map<String, dynamic>> getTips({
+    String? crop,
+    String? category,
+    String? season,
+    String? q,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+    };
+    if (crop != null && crop.isNotEmpty) params['crop'] = crop;
+    if (category != null && category.isNotEmpty) params['category'] = category;
+    if (season != null && season.isNotEmpty) params['season'] = season;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+
+    final res = await _dio.get('/tips', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /tips/{tip_id} — get single tip
+  Future<Map<String, dynamic>> getTipDetail(String tipId) async {
+    final res = await _dio.get('/tips/$tipId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Disease Field Reports ────────────────────────────────────────────────
+
+  /// POST /disease-reports — submit a field disease report
+  Future<Map<String, dynamic>> createDiseaseReport(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _dio.post('/disease-reports', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /disease-reports — list reports with filters
+  Future<Map<String, dynamic>> getDiseaseReports({
+    String? district,
+    String? crop,
+    String? severity,
+    String? status,
+    bool myReports = false,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+      'my_reports': myReports,
+    };
+    if (district != null && district.isNotEmpty) params['district'] = district;
+    if (crop != null && crop.isNotEmpty) params['crop'] = crop;
+    if (severity != null && severity.isNotEmpty) params['severity'] = severity;
+    if (status != null && status.isNotEmpty) params['status'] = status;
+
+    final res = await _dio.get('/disease-reports', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /disease-reports/{report_id} — get report detail
+  Future<Map<String, dynamic>> getDiseaseReportDetail(String reportId) async {
+    final res = await _dio.get('/disease-reports/$reportId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /disease-reports/stats/summary — disease statistics
+  Future<Map<String, dynamic>> getDiseaseReportStats({String? district}) async {
+    final params = <String, dynamic>{};
+    if (district != null && district.isNotEmpty) {
+      params['district'] = district;
+    }
+    final res = await _dio.get(
+      '/disease-reports/stats/summary',
+      queryParameters: params,
+    );
     return res.data as Map<String, dynamic>;
   }
 
