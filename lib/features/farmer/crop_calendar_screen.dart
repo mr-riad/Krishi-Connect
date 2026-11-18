@@ -130,29 +130,6 @@ class _CropCalendarScreenState extends State<CropCalendarScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Badge
-        Padding(
-          padding: EdgeInsets.only(right: 16.w, top: 12.h),
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                'F-08 · কৃষক',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w700,
-                  color: primaryGreen,
-                ),
-              ),
-            ),
-          ),
-        ),
-
         // Header
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
