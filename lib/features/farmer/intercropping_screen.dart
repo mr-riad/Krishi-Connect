@@ -423,7 +423,7 @@ class _IntercroppingScreenState extends State<IntercroppingScreen> {
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             itemCount: _seasonFilters.length,
-            separatorBuilder: (_, __) => SizedBox(width: 10.w),
+            separatorBuilder: (_, _) => SizedBox(width: 10.w),
             itemBuilder: (context, index) {
               final isSelected = _selectedSeasonFilter == index;
               return InkWell(
@@ -506,7 +506,7 @@ class _IntercroppingScreenState extends State<IntercroppingScreen> {
               : ListView.separated(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   itemCount: _combos.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                  separatorBuilder: (_, _) => SizedBox(height: 12.h),
                   itemBuilder: (_, index) =>
                       _buildComboCard(_combos[index]),
                 ),

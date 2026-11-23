@@ -547,4 +547,187 @@ class KrishiApiService {
     final res = await _dio.post('/calls', data: body);
     return res.data as Map<String, dynamic>;
   }
+
+  // ─── Machinery Directory ───────────────────────────────────────────────────
+
+  /// GET /machinery – list machinery (filter by type, district, availability)
+  Future<Map<String, dynamic>> getMachinery({
+    String? machineryType,
+    String? district,
+    String? upazila,
+    String? availability,
+    double? lat,
+    double? lon,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{'limit': limit, 'offset': offset};
+    if (machineryType != null && machineryType.isNotEmpty) {
+      params['machinery_type'] = machineryType;
+    }
+    if (district != null && district.isNotEmpty) params['district'] = district;
+    if (upazila != null && upazila.isNotEmpty) params['upazila'] = upazila;
+    if (availability != null && availability.isNotEmpty) {
+      params['availability'] = availability;
+    }
+    if (lat != null) params['lat'] = lat;
+    if (lon != null) params['lon'] = lon;
+    final res = await _dio.get('/machinery', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /machinery/{id} – single machinery detail
+  Future<Map<String, dynamic>> getMachineryDetail(String id) async {
+    final res = await _dio.get('/machinery/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /machinery – add a machinery listing
+  Future<Map<String, dynamic>> addMachinery(Map<String, dynamic> body) async {
+    final res = await _dio.post('/machinery', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Agricultural News ─────────────────────────────────────────────────────
+
+  /// GET /news – list news (filter by category, district, q)
+  Future<Map<String, dynamic>> getNews({
+    String? category,
+    String? district,
+    String? q,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{'limit': limit, 'offset': offset};
+    if (category != null && category.isNotEmpty) params['category'] = category;
+    if (district != null && district.isNotEmpty) params['district'] = district;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+    final res = await _dio.get('/news', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /news/{id} – single news article
+  Future<Map<String, dynamic>> getNewsDetail(String id) async {
+    final res = await _dio.get('/news/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /news/categories – list all news categories
+  Future<List<dynamic>> getNewsCategories() async {
+    final res = await _dio.get('/news/categories');
+    return res.data as List<dynamic>;
+  }
+
+  // ─── Community Forum ───────────────────────────────────────────────────────
+
+  /// GET /forum/posts – list posts (filter by post_type: question | experience)
+  Future<List<dynamic>> getForumPosts({
+    String? postType,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{'limit': limit, 'offset': offset};
+    if (postType != null && postType.isNotEmpty) params['post_type'] = postType;
+    final res = await _dio.get('/forum/posts', queryParameters: params);
+    return res.data as List<dynamic>;
+  }
+
+  /// GET /forum/posts/{id} – single post detail
+  Future<Map<String, dynamic>> getForumPost(String postId) async {
+    final res = await _dio.get('/forum/posts/$postId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /forum/posts – create a new post
+  Future<Map<String, dynamic>> createForumPost(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _dio.post('/forum/posts', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /forum/posts/{id}/like – toggle like on a post
+  Future<Map<String, dynamic>> toggleForumLike(String postId) async {
+    final res = await _dio.post('/forum/posts/$postId/like');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /forum/posts/{id}/comments – list comments for a post
+  Future<List<dynamic>> getForumComments(String postId) async {
+    final res = await _dio.get('/forum/posts/$postId/comments');
+    return res.data as List<dynamic>;
+  }
+
+  /// POST /forum/posts/{id}/comments – add a comment
+  Future<Map<String, dynamic>> addForumComment(
+    String postId,
+    String text,
+  ) async {
+    final res = await _dio.post(
+      '/forum/posts/$postId/comments',
+      data: {'text': text},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// DELETE /forum/comments/{id} – delete a comment
+  Future<void> deleteForumComment(String commentId) async {
+    await _dio.delete('/forum/comments/$commentId');
+  }
+
+  /// POST /forum/posts/{id}/report – report a post
+  Future<Map<String, dynamic>> reportForumPost(
+    String postId,
+    String reason,
+  ) async {
+    final res = await _dio.post(
+      '/forum/posts/$postId/report',
+      data: {'reason': reason},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  // ─── Weather ──────────────────────────────────────────────────────────────
+
+  /// GET /weather/alerts – all weather alerts (optionally filtered by district)
+  Future<Map<String, dynamic>> getWeatherAlerts({
+    String? district,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{'limit': limit, 'offset': offset};
+    if (district != null && district.isNotEmpty) params['district'] = district;
+    final res = await _dio.get('/weather/alerts', queryParameters: params);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// GET /weather/alerts/my – alerts targeting the current user's district
+  Future<Map<String, dynamic>> getMyWeatherAlerts({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final res = await _dio.get(
+      '/weather/alerts/my',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /weather/fcm-token – register/update FCM device token
+  Future<void> registerFcmToken({
+    required String fcmToken,
+    String? district,
+  }) async {
+    final body = <String, dynamic>{'fcm_token': fcmToken};
+    if (district != null && district.isNotEmpty) body['district'] = district;
+    await _dio.post('/weather/fcm-token', data: body);
+  }
+
+  /// POST /weather/alerts – admin: create + broadcast a weather alert
+  Future<Map<String, dynamic>> createWeatherAlert(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _dio.post('/weather/alerts', data: body);
+    return res.data as Map<String, dynamic>;
+  }
 }
