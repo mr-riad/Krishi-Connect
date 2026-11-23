@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
 import '../../helpers/call_helper.dart';
+import '../../models/weather_machinery_news_models.dart';
+import '../../services/api_service.dart';
 
 class FarmEquipmentScreen extends StatefulWidget {
   const FarmEquipmentScreen({super.key});
@@ -14,83 +16,66 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
-  int _selectedCategoryIndex = 0;
-  final List<String> _categories = ['ট্রাক্টর', 'হারভেস্টার', 'পাওয়ার টিলার'];
-
-  final List<Map<String, dynamic>> _equipment = [
-    {
-      'name': 'জনতা ট্রাক্টর সার্ভিস',
-      'owner': 'রফিকুল ইসলাম',
-      'upazila': 'বাগমারা',
-      'rate': '৮০০',
-      'unit': 'বিঘা/দিন',
-      'type': 0,
-      'phone': '01712-345678',
-      'available': true,
-    },
-    {
-      'name': 'সোনালী ট্রাক্টর',
-      'owner': 'আবুল কাসেম',
-      'upazila': 'গোদাগাড়ী',
-      'rate': '৭৫০',
-      'unit': 'বিঘা/দিন',
-      'type': 0,
-      'phone': '01819-234567',
-      'available': true,
-    },
-    {
-      'name': 'আধুনিক হারভেস্টার',
-      'owner': 'মুকুল মিয়া',
-      'upazila': 'তানোর',
-      'rate': '৩,৫০০',
-      'unit': 'বিঘা',
-      'type': 1,
-      'phone': '01723-456789',
-      'available': false,
-    },
-    {
-      'name': 'কৃষি হারভেস্টার সার্ভিস',
-      'owner': 'শামসুল হক',
-      'upazila': 'পবা',
-      'rate': '৩,২০০',
-      'unit': 'বিঘা',
-      'type': 1,
-      'phone': '01918-765432',
-      'available': true,
-    },
-    {
-      'name': 'গ্রামীণ পাওয়ার টিলার',
-      'owner': 'জয়নাল আবেদিন',
-      'upazila': 'মোহনপুর',
-      'rate': '৪৫০',
-      'unit': 'বিঘা/দিন',
-      'type': 2,
-      'phone': '01714-223344',
-      'available': true,
-    },
-    {
-      'name': 'রহিম পাওয়ার টিলার',
-      'owner': 'আব্দুর রহিম',
-      'upazila': 'দুর্গাপুর',
-      'rate': '৪০০',
-      'unit': 'বিঘা/দিন',
-      'type': 2,
-      'phone': '01815-334455',
-      'available': true,
-    },
+  /// Category entries: [Bengali label, API enum value or null for 'all']
+  static const List<(String, String?)> _categories = [
+    ('সব', null),
+    ('ট্রাক্টর', 'tractor'),
+    ('হারভেস্টার', 'harvester'),
+    ('পাওয়ার টিলার', 'power_tiller'),
+    ('থ্রেশার', 'thresher'),
+    ('সেচ পাম্প', 'irrigation_pump'),
+    ('স্প্রেয়ার', 'sprayer'),
   ];
 
-  List<Map<String, dynamic>> get _filtered =>
-      _equipment.where((e) => e['type'] == _selectedCategoryIndex).toList();
+  int _selectedCategoryIndex = 0;
+  List<MachineryItem> _items = [];
+  bool _loading = false;
+  String? _error;
 
-  void _showCallSheet(Map<String, dynamic> item) {
+  final _api = KrishiApiService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final typeKey = _categories[_selectedCategoryIndex].$2;
+      final res = await _api.getMachinery(
+        machineryType: typeKey,
+        limit: 50,
+      );
+      final page = MachineryPage.fromJson(res);
+      if (mounted) {
+        setState(() {
+          _items = page.items;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'ডেটা লোড করতে সমস্যা হয়েছে।\n$e';
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  void _showCallSheet(MachineryItem item) {
     showDirectCallBottomSheet(
       context: context,
-      name: item['owner'] as String,
-      phone: (item['phone'] ?? '01712-345678') as String,
+      name: item.ownerName,
+      phone: item.phone,
       roleOrType: 'যন্ত্রের মালিক',
-      subtitle: "${item['name']} · ভাড়া: ৳${item['rate']} / ${item['unit']}",
-      location: item['upazila'] as String?,
+      subtitle: '${item.machineryTypeBn} · ${item.formattedRate}',
+      location: item.upazila ?? item.district,
     );
   }
 
@@ -124,6 +109,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                 ),
               ),
             ),
+
             // Header
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
@@ -162,11 +148,16 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _categories.length,
-                separatorBuilder: (context, index) => SizedBox(width: 10.w),
+                separatorBuilder: (_, _) => SizedBox(width: 10.w),
                 itemBuilder: (context, index) {
                   final isSelected = _selectedCategoryIndex == index;
                   return InkWell(
-                    onTap: () => setState(() => _selectedCategoryIndex = index),
+                    onTap: () {
+                      if (_selectedCategoryIndex != index) {
+                        setState(() => _selectedCategoryIndex = index);
+                        _loadData();
+                      }
+                    },
                     borderRadius: BorderRadius.circular(20.r),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
@@ -179,7 +170,7 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
                         ),
                       ),
                       child: Text(
-                        _categories[index],
+                        _categories[index].$1,
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w700,
@@ -193,108 +184,190 @@ class _FarmEquipmentScreenState extends State<FarmEquipmentScreen> {
             ),
             SizedBox(height: 14.h),
 
-            // List
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: _filtered.length,
-                separatorBuilder: (context, index) => SizedBox(height: 12.h),
-                itemBuilder: (context, index) {
-                  final item = _filtered[index];
-                  return Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.025),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        // Icon
-                        Container(
-                          width: 46.w,
-                          height: 46.w,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF0FDF4),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.agriculture_rounded, color: primaryGreen, size: 22.sp),
-                        ),
-                        SizedBox(width: 12.w),
-                        // Details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['name'],
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF111827),
-                                ),
-                              ),
-                              SizedBox(height: 3.h),
-                              Text(
-                                '${item['owner']} · ${item['upazila']}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF6B7280),
-                                ),
-                              ),
-                              SizedBox(height: 3.h),
-                              Text(
-                                'ভাড়া ৳${item['rate']} / ${item['unit']}',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: primaryGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Call Button
-                        GestureDetector(
-                          onTap: () => _showCallSheet(item),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                            decoration: BoxDecoration(
-                              color: item['available'] as bool ? primaryGreen : Colors.grey.shade400,
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.phone_in_talk_rounded, size: 14.sp, color: Colors.white),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  'সরাসরি কল',
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+            // Content
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.wifi_off_rounded, size: 48.sp, color: Colors.grey),
+              SizedBox(height: 12.h),
+              Text(
+                'ডেটা লোড করা যায়নি',
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
               ),
+              SizedBox(height: 6.h),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+              ),
+              SizedBox(height: 16.h),
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('আবার চেষ্টা করুন'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.agriculture_rounded, size: 52.sp, color: Colors.grey.shade300),
+            SizedBox(height: 12.h),
+            Text(
+              'এই বিভাগে কোনো যন্ত্র নেই',
+              style: TextStyle(fontSize: 15.sp, color: Colors.grey),
             ),
           ],
         ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      color: primaryGreen,
+      child: ListView.separated(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        itemCount: _items.length,
+        separatorBuilder: (_, _) => SizedBox(height: 12.h),
+        itemBuilder: (context, index) {
+          final item = _items[index];
+          return Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Icon
+                Container(
+                  width: 46.w,
+                  height: 46.w,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF0FDF4),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.agriculture_rounded,
+                    color: primaryGreen,
+                    size: 22.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                // Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.brandModel != null && item.brandModel!.isNotEmpty
+                            ? item.brandModel!
+                            : item.machineryTypeBn,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                      SizedBox(height: 3.h),
+                      Text(
+                        '${item.ownerName} · ${item.upazila ?? item.district}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                      SizedBox(height: 3.h),
+                      Text(
+                        'ভাড়া ${item.formattedRate}',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w700,
+                          color: primaryGreen,
+                        ),
+                      ),
+                      if (!item.isAvailable) ...[
+                        SizedBox(height: 2.h),
+                        Text(
+                          item.availabilityBn,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.red.shade400,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Call Button
+                GestureDetector(
+                  onTap: () => _showCallSheet(item),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: item.isAvailable ? primaryGreen : Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.phone_in_talk_rounded,
+                          size: 14.sp,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          'সরাসরি কল',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

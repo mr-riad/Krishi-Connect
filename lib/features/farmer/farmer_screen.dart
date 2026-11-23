@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../gen/colors.gen.dart';
+import '../../models/weather_machinery_news_models.dart';
+import '../../services/api_service.dart';
 import 'farm_equipment_screen.dart';
 import 'farmer_community_screen.dart';
 import 'crop_calendar_screen.dart';
 import 'intercropping_screen.dart';
 import 'nearby_buyers_screen.dart';
 import 'agri_news_screen.dart';
+import 'weather_alerts_screen.dart';
 
-class FarmerScreen extends StatelessWidget {
+class FarmerScreen extends StatefulWidget {
   final VoidCallback? onGoToPost;
   final VoidCallback? onGoToBuyerRates;
   final VoidCallback? onGoToAdvisory;
@@ -20,11 +23,43 @@ class FarmerScreen extends StatelessWidget {
     this.onGoToAdvisory,
   });
 
+  @override
+  State<FarmerScreen> createState() => _FarmerScreenState();
+}
+
+class _FarmerScreenState extends State<FarmerScreen> {
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
+  WeatherAlert? _latestAlert;
+  bool _weatherLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    try {
+      final res = await KrishiApiService.instance.getMyWeatherAlerts(limit: 1);
+      final page = WeatherAlertPage.fromJson(res);
+      if (mounted) {
+        setState(() {
+          _latestAlert = page.items.isNotEmpty ? page.items.first : null;
+          _weatherLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _weatherLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final onGoToPost = widget.onGoToPost;
+    final onGoToBuyerRates = widget.onGoToBuyerRates;
+    final onGoToAdvisory = widget.onGoToAdvisory;
     final List<Map<String, dynamic>> services = [
       {'title': 'ক্রেতার দর', 'icon': Icons.bar_chart_rounded, 'onTap': onGoToBuyerRates},
       {
@@ -142,63 +177,103 @@ class FarmerScreen extends StatelessWidget {
               SizedBox(height: 18.h),
 
               // Weather Alert Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDE68A),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFFCD34D)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const WeatherAlertsScreen(),
+                  ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.cloudy_snowing,
-                        color: const Color(0xFF92400E),
-                        size: 26.sp,
-                      ),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                  decoration: BoxDecoration(
+                    color: _latestAlert != null
+                        ? const Color(0xFFFDE68A)
+                        : const Color(0xFFD1FAE5),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: _latestAlert != null
+                          ? const Color(0xFFFCD34D)
+                          : const Color(0xFF6EE7B7),
                     ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'আবহাওয়া সতর্কতা',
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF78350F),
-                            ),
-                          ),
-                          SizedBox(height: 3.h),
-                          Text(
-                            'আজ ভারী বৃষ্টির সম্ভাবনা। কাটা ফসল ঢেকে রাখুন।',
-                            style: TextStyle(
-                              fontSize: 12.5.sp,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF92400E),
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: _latestAlert != null
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.12)
+                            : const Color(0xFF10B981).withValues(alpha: 0.10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _latestAlert != null
+                              ? Icons.cloudy_snowing
+                              : Icons.wb_sunny_outlined,
+                          color: _latestAlert != null
+                              ? const Color(0xFF92400E)
+                              : const Color(0xFF065F46),
+                          size: 26.sp,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: _weatherLoading
+                            ? SizedBox(
+                                height: 20.h,
+                                child: const LinearProgressIndicator(),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _latestAlert != null
+                                        ? 'আবহাওয়া সতর্কতা'
+                                        : 'আবহাওয়া স্বাভাবিক',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: _latestAlert != null
+                                          ? const Color(0xFF78350F)
+                                          : const Color(0xFF065F46),
+                                    ),
+                                  ),
+                                  SizedBox(height: 3.h),
+                                  Text(
+                                    _latestAlert?.bodyBn ??
+                                        'আজ আবহাওয়া পরিষ্কার। চাষাবাদের জন্য উপযুক্ত।',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12.5.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: _latestAlert != null
+                                          ? const Color(0xFF92400E)
+                                          : const Color(0xFF065F46),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: _latestAlert != null
+                            ? const Color(0xFF92400E)
+                            : const Color(0xFF065F46),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 

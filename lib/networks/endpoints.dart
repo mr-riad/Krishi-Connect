@@ -61,4 +61,21 @@ final class Endpoints {
   static String diseaseReportDetails(String id) => "/disease-reports/$id";
   static String diseaseReportPhotos(String id) => "/disease-reports/$id/photos";
   static String diseaseReportStats() => "/disease-reports/stats/summary";
+
+  // Machinery Directory
+  static String machinery() => "/machinery";
+  static String machineryDetail(String id) => "/machinery/$id";
+
+  // Agricultural News
+  static String news() => "/news";
+  static String newsDetail(String id) => "/news/$id";
+  static String newsCategories() => "/news/categories";
+
+  // Community Forum
+  static String forumPosts() => "/forum/posts";
+  static String forumPostDetail(String id) => "/forum/posts/$id";
+  static String forumPostLike(String id) => "/forum/posts/$id/like";
+  static String forumPostComments(String id) => "/forum/posts/$id/comments";
+  static String forumComment(String id) => "/forum/comments/$id";
+  static String forumPostReport(String id) => "/forum/posts/$id/report";
 }

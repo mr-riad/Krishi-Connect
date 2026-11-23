@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../constants/app_constants.dart';
 import '../../gen/colors.gen.dart';
+import '../../helpers/di.dart';
+import '../../models/forum_models.dart';
+import '../../services/api_service.dart';
 
 class FarmerCommunityScreen extends StatefulWidget {
   const FarmerCommunityScreen({super.key});
@@ -13,74 +17,189 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
   static const Color primaryGreen = AppColors.primaryGreen;
   static const Color bgColor = AppColors.bgColor;
 
-  int _selectedTab = 0;
-  final List<String> _tabs = ['সব', 'প্রশ্ন', 'অভিজ্ঞতা'];
+  final _api = KrishiApiService.instance;
 
-  final List<Map<String, dynamic>> _posts = [
-    {
-      'farmer': 'মো: আলম',
-      'upazila': 'তানোর',
-      'text': 'এই মৌসুমে ধানে বাদামি গাছ ফড়িং দেখা যাচ্ছে। কেউ কি ভালো সমাধান জানেন?',
-      'likes': 12,
-      'comments': 5,
-      'type': 'প্রশ্ন',
-      'time': '২ ঘণ্টা আগে',
-      'liked': false,
-    },
-    {
-      'farmer': 'রহিমা বেগম',
-      'upazila': 'গোদাগাড়ী',
-      'text': 'গত বছর শীতকালীন সবজি চাষে ভালো ফলন পেয়েছিলাম। মিশ্র চাষ পদ্ধতিতে খরচ কমিয়েছি।',
-      'likes': 34,
-      'comments': 8,
-      'type': 'অভিজ্ঞতা',
-      'time': '৫ ঘণ্টা আগে',
-      'liked': true,
-    },
-    {
-      'farmer': 'করিম মিয়া',
-      'upazila': 'পবা',
-      'text': 'আলুতে লেট ব্লাইট রোগ হলে কোন কীটনাশক দিতে হবে? কতটুকু দিতে হবে?',
-      'likes': 7,
-      'comments': 12,
-      'type': 'প্রশ্ন',
-      'time': '১ দিন আগে',
-      'liked': false,
-    },
-    {
-      'farmer': 'জামাল উদ্দিন',
-      'upazila': 'মোহনপুর',
-      'text': 'ড্রিপ সেচ পদ্ধতিতে টমেটো চাষ করে এবার দ্বিগুণ ফলন পেয়েছি। পানির অপচয়ও অনেক কমেছে।',
-      'likes': 58,
-      'comments': 15,
-      'type': 'অভিজ্ঞতা',
-      'time': '২ দিন আগে',
-      'liked': false,
-    },
-    {
-      'farmer': 'নাসিমা খাতুন',
-      'upazila': 'বাগমারা',
-      'text': 'সার দেওয়ার সঠিক সময় কোনটা? বোরো মৌসুমে সেচ কতটুকু দিতে হবে?',
-      'likes': 9,
-      'comments': 4,
-      'type': 'প্রশ্ন',
-      'time': '৩ দিন আগে',
-      'liked': false,
-    },
+  /// Tabs: (Bengali label, API post_type value or null for 'all')
+  static const List<(String, String?)> _tabs = [
+    ('সব', null),
+    ('প্রশ্ন', 'question'),
+    ('অভিজ্ঞতা', 'experience'),
   ];
 
-  List<Map<String, dynamic>> get _filtered {
-    if (_selectedTab == 0) return _posts;
-    return _posts.where((p) => p['type'] == _tabs[_selectedTab]).toList();
-  }
-
+  int _selectedTab = 0;
+  List<ForumPost> _posts = [];
+  bool _loading = false;
+  String? _error;
+  bool _posting = false;
   bool _showForm = false;
+  String _selectedPostType = 'question';
   final TextEditingController _postController = TextEditingController();
+
+  String get _currentUserId =>
+      appData.read(kKeyUserID)?.toString() ?? '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
 
   @override
   void dispose() {
     _postController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPosts() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final postType = _tabs[_selectedTab].$2;
+      final res = await _api.getForumPosts(postType: postType, limit: 50);
+      final posts = res
+          .map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
+          .toList();
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'পোস্ট লোড করতে সমস্যা হয়েছে।\n$e';
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleLike(int index) async {
+    final post = _posts[index];
+    // Optimistic update
+    setState(() {
+      _posts[index] = post.withToggledLike(_currentUserId);
+    });
+    try {
+      await _api.toggleForumLike(post.id);
+      // Refresh the post from server for accurate count
+      final res = await _api.getForumPost(post.id);
+      final updated = ForumPost.fromJson(res);
+      if (mounted) {
+        setState(() {
+          _posts[index] = updated;
+        });
+      }
+    } catch (_) {
+      // Roll back on error
+      if (mounted) {
+        setState(() {
+          _posts[index] = post;
+        });
+      }
+    }
+  }
+
+  Future<void> _submitPost() async {
+    final text = _postController.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _posting = true);
+    try {
+      await _api.createForumPost({
+        'text': text,
+        'post_type': _selectedPostType,
+      });
+      _postController.clear();
+      setState(() {
+        _showForm = false;
+        _posting = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('পোস্ট প্রকাশিত হয়েছে!'),
+            backgroundColor: primaryGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      await _loadPosts();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _posting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('পোস্ট করতে সমস্যা হয়েছে: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showComments(ForumPost post) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) => _CommentsSheet(post: post, api: _api),
+    );
+  }
+
+  Future<void> _reportPost(ForumPost post) async {
+    final reasons = ['স্প্যাম', 'অসৌজন্যমূলক', 'মিথ্যা তথ্য', 'অন্যান্য'];
+    String? chosen;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('পোস্ট রিপোর্ট করুন'),
+        content: StatefulBuilder(
+          builder: (ctx2, setLocal) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: reasons.map((r) {
+              return RadioListTile<String>(
+                value: r,
+                groupValue: chosen,
+                title: Text(r),
+                onChanged: (v) => setLocal(() => chosen = v),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('বাতিল'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: chosen == null
+                ? null
+                : () async {
+                    Navigator.pop(ctx);
+                    try {
+                      await _api.reportForumPost(post.id, chosen!);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('রিপোর্ট পাঠানো হয়েছে।')),
+                        );
+                      }
+                    } catch (_) {}
+                  },
+            child: const Text(
+              'রিপোর্ট করুন',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -152,11 +271,16 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 itemCount: _tabs.length,
-                separatorBuilder: (context, index) => SizedBox(width: 10.w),
+                separatorBuilder: (_, _) => SizedBox(width: 10.w),
                 itemBuilder: (context, index) {
                   final isSelected = _selectedTab == index;
                   return InkWell(
-                    onTap: () => setState(() => _selectedTab = index),
+                    onTap: () {
+                      if (_selectedTab != index) {
+                        setState(() => _selectedTab = index);
+                        _loadPosts();
+                      }
+                    },
                     borderRadius: BorderRadius.circular(20.r),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
@@ -169,7 +293,7 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
                         ),
                       ),
                       child: Text(
-                        _tabs[index],
+                        _tabs[index].$1,
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w700,
@@ -183,7 +307,7 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
             ),
             SizedBox(height: 12.h),
 
-            // New Post Form (if shown)
+            // New Post Form
             if (_showForm)
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -194,186 +318,70 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
                   border: Border.all(color: primaryGreen.withValues(alpha: 0.4)),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Post type toggle
+                    Row(
+                      children: [
+                        Text(
+                          'পোস্টের ধরন:',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF374151),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        _typeChip('প্রশ্ন', 'question'),
+                        SizedBox(width: 8.w),
+                        _typeChip('অভিজ্ঞতা', 'experience'),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
                     TextField(
                       controller: _postController,
                       maxLines: 3,
                       decoration: InputDecoration(
                         hintText: 'আপনার প্রশ্ন বা অভিজ্ঞতা লিখুন...',
-                        hintStyle: TextStyle(fontSize: 13.sp, color: const Color(0xFF9CA3AF)),
+                        hintStyle: TextStyle(
+                          fontSize: 13.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
                         border: InputBorder.none,
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() => _showForm = false);
-                        _postController.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('পোস্ট প্রকাশিত হয়েছে!'),
-                            backgroundColor: primaryGreen,
-                            behavior: SnackBarBehavior.floating,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: _posting ? null : _submitPost,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryGreen,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.r),
                         ),
+                        child: _posting
+                            ? SizedBox(
+                                width: 18.w,
+                                height: 18.w,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                'প্রকাশ করুন',
+                                style: TextStyle(fontSize: 13.sp),
+                              ),
                       ),
-                      child: Text('প্রকাশ করুন', style: TextStyle(fontSize: 13.sp)),
                     ),
                   ],
                 ),
               ),
 
             // Posts
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: _filtered.length,
-                separatorBuilder: (context, index) => SizedBox(height: 10.h),
-                itemBuilder: (context, index) {
-                  final post = _filtered[index];
-                  return Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16.r,
-                              backgroundColor: const Color(0xFFF0FDF4),
-                              child: Icon(Icons.person_rounded, color: primaryGreen, size: 18.sp),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        post['farmer'],
-                                        style: TextStyle(
-                                          fontSize: 13.sp,
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFF111827),
-                                        ),
-                                      ),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        '· ${post['upazila']}',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: const Color(0xFF6B7280),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    post['time'],
-                                    style: TextStyle(
-                                      fontSize: 11.sp,
-                                      color: const Color(0xFF9CA3AF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                              decoration: BoxDecoration(
-                                color: post['type'] == 'প্রশ্ন'
-                                    ? const Color(0xFFFEF3C7)
-                                    : const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Text(
-                                post['type'],
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: post['type'] == 'প্রশ্ন'
-                                      ? const Color(0xFFD97706)
-                                      : primaryGreen,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10.h),
-                        Text(
-                          post['text'],
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: const Color(0xFF374151),
-                            height: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  post['liked'] = !(post['liked'] as bool);
-                                  if (post['liked'] as bool) {
-                                    post['likes'] = (post['likes'] as int) + 1;
-                                  } else {
-                                    post['likes'] = (post['likes'] as int) - 1;
-                                  }
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    post['liked'] as bool
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    size: 18.sp,
-                                    color: post['liked'] as bool
-                                        ? Colors.red
-                                        : const Color(0xFF9CA3AF),
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    '${post['likes']} পছন্দ',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 20.w),
-                            Icon(Icons.comment_outlined, size: 18.sp, color: const Color(0xFF9CA3AF)),
-                            SizedBox(width: 4.w),
-                            Text(
-                              '${post['comments']} মতবা',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: const Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
@@ -385,6 +393,494 @@ class _FarmerCommunityScreenState extends State<FarmerCommunityScreen> {
         label: Text(
           'নতুন পোস্ট',
           style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  Widget _typeChip(String label, String value) {
+    final selected = _selectedPostType == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPostType = value),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+        decoration: BoxDecoration(
+          color: selected ? primaryGreen : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : const Color(0xFF6B7280),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.wifi_off_rounded, size: 48.sp, color: Colors.grey),
+              SizedBox(height: 12.h),
+              Text(
+                'পোস্ট লোড করা যায়নি',
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+              ),
+              SizedBox(height: 16.h),
+              ElevatedButton.icon(
+                onPressed: _loadPosts,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('আবার চেষ্টা করুন'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_posts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.forum_outlined, size: 52.sp, color: Colors.grey.shade300),
+            SizedBox(height: 12.h),
+            Text(
+              'কোনো পোস্ট নেই। প্রথম পোস্ট করুন!',
+              style: TextStyle(fontSize: 15.sp, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadPosts,
+      color: primaryGreen,
+      child: ListView.separated(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        itemCount: _posts.length,
+        separatorBuilder: (_, _) => SizedBox(height: 10.h),
+        itemBuilder: (context, index) {
+          final post = _posts[index];
+          final isLiked = post.isLikedBy(_currentUserId);
+          return Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16.r,
+                      backgroundColor: const Color(0xFFF0FDF4),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: primaryGreen,
+                        size: 18.sp,
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                post.authorName ?? 'কৃষক',
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF111827),
+                                ),
+                              ),
+                              if (post.authorUpazila != null) ...[
+                                SizedBox(width: 6.w),
+                                Text(
+                                  '· ${post.authorUpazila}',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          Text(
+                            post.relativeTime,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Post type badge
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: post.postType == 'question'
+                            ? const Color(0xFFFEF3C7)
+                            : const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        post.postTypeBn,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: post.postType == 'question'
+                              ? const Color(0xFFD97706)
+                              : primaryGreen,
+                        ),
+                      ),
+                    ),
+                    // Report button
+                    IconButton(
+                      onPressed: () => _reportPost(post),
+                      icon: Icon(
+                        Icons.flag_outlined,
+                        size: 16.sp,
+                        color: const Color(0xFF9CA3AF),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  post.text,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: const Color(0xFF374151),
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _toggleLike(index),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isLiked
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 18.sp,
+                            color: isLiked ? Colors.red : const Color(0xFF9CA3AF),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${post.likes} পছন্দ',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 20.w),
+                    GestureDetector(
+                      onTap: () => _showComments(post),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.comment_outlined,
+                            size: 18.sp,
+                            color: const Color(0xFF9CA3AF),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${post.commentCount} মন্তব্য',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── Comments Bottom Sheet ─────────────────────────────────────────────────────
+
+class _CommentsSheet extends StatefulWidget {
+  final ForumPost post;
+  final KrishiApiService api;
+
+  const _CommentsSheet({required this.post, required this.api});
+
+  @override
+  State<_CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends State<_CommentsSheet> {
+  static const Color primaryGreen = AppColors.primaryGreen;
+
+  List<ForumComment> _comments = [];
+  bool _loading = true;
+  final TextEditingController _commentCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadComments();
+  }
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadComments() async {
+    setState(() => _loading = true);
+    try {
+      final res = await widget.api.getForumComments(widget.post.id);
+      final comments = res
+          .map((e) => ForumComment.fromJson(e as Map<String, dynamic>))
+          .toList();
+      if (mounted) {
+        setState(() {
+          _comments = comments;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _addComment() async {
+    final text = _commentCtrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _submitting = true);
+    try {
+      await widget.api.addForumComment(widget.post.id, text);
+      _commentCtrl.clear();
+      await _loadComments();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('মন্তব্য করতে সমস্যা হয়েছে।')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.65,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 10.h, bottom: 10.h),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Text(
+                'মন্তব্য',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+            ),
+            const Divider(),
+            // Comments
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _comments.isEmpty
+                      ? Center(
+                          child: Text(
+                            'এখনো কোনো মন্তব্য নেই',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
+                          itemCount: _comments.length,
+                          separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                          itemBuilder: (context, i) {
+                            final c = _comments[i];
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 14.r,
+                                  backgroundColor: const Color(0xFFF0FDF4),
+                                  child: Icon(
+                                    Icons.person_rounded,
+                                    color: primaryGreen,
+                                    size: 14.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            c.authorName ?? 'কৃষক',
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          SizedBox(width: 6.w),
+                                          Text(
+                                            c.relativeTime,
+                                            style: TextStyle(
+                                              fontSize: 11.sp,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        c.text,
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: const Color(0xFF374151),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+            ),
+            // Comment Input
+            const Divider(height: 1),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'মন্তব্য লিখুন...',
+                        hintStyle: TextStyle(
+                          fontSize: 13.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                          borderSide: BorderSide(color: const Color(0xFFE5E7EB)),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 10.h,
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  GestureDetector(
+                    onTap: _submitting ? null : _addComment,
+                    child: Container(
+                      padding: EdgeInsets.all(10.w),
+                      decoration: BoxDecoration(
+                        color: primaryGreen,
+                        shape: BoxShape.circle,
+                      ),
+                      child: _submitting
+                          ? SizedBox(
+                              width: 16.w,
+                              height: 16.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              Icons.send_rounded,
+                              size: 16.sp,
+                              color: Colors.white,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

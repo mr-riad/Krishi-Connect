@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/app_constants.dart';
 import '../../gen/colors.gen.dart';
 import '../../helpers/di.dart';
-import '../../helpers/toast.dart';
 import '../../models/weather_machinery_news_models.dart';
 import '../../services/api_service.dart';
 
@@ -379,7 +378,9 @@ class _WeatherAlertsScreenState extends State<WeatherAlertsScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
               onPressed: () async {
                 if (titleController.text.trim().isEmpty || bodyController.text.trim().isEmpty) {
-                  Toast.showToast(message: 'শিরোনাম ও বিবরণ আবশ্যক');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('শিরোনাম ও বিবরণ আবশ্যক')),
+                  );
                   return;
                 }
                 Navigator.pop(dialogCtx);
@@ -401,10 +402,18 @@ class _WeatherAlertsScreenState extends State<WeatherAlertsScreen> {
                     'source': 'কৃষি সংযোগ আবহাওয়া সেল',
                   });
 
-                  Toast.showToast(message: 'সতর্কতা সম্প্রচার ও নোটিফিকেশন পাঠানো হয়েছে');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('সতর্কতা সম্প্রচার ও নোটিফিকেশন পাঠানো হয়েছে')),
+                    );
+                  }
                   _fetchAlerts();
                 } catch (e) {
-                  Toast.showToast(message: 'সতর্কতা পাঠাতে ব্যর্থ: $e');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('সতর্কতা পাঠাতে ব্যর্থ: $e')),
+                    );
+                  }
                 }
               },
               child: const Text('পাঠান ও পুশ করুন', style: TextStyle(color: Colors.white)),
